@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using Multiformatris.UI.Controls;
 
 namespace Multiformatris.Infrastructure.Input
 {
@@ -13,6 +14,9 @@ namespace Multiformatris.Infrastructure.Input
         public event Action OnHold;
         public event Action OnPause;
 
+        [Header("Mobile Controls")]
+        public MobileGameControls GameControls;
+
         [Header("Swipe Settings")]
         public float SwipeThreshold = 50f;
         public float SwipeCooldown = 0.1f;
@@ -21,12 +25,33 @@ namespace Multiformatris.Infrastructure.Input
         private float _touchStartTime;
         private bool _isSwiping;
         private float _swipeCooldownTimer;
-        private bool _softDropActive;
+
+        private void Start()
+        {
+            if (GameControls != null)
+            {
+                GameControls.OnMove += HandleMove;
+                GameControls.OnRotateX += HandleRotateX;
+                GameControls.OnRotateZ += HandleRotateZ;
+                GameControls.OnHardDrop += HandleHardDrop;
+                GameControls.OnSoftDrop += HandleSoftDrop;
+                GameControls.OnHold += HandleHold;
+                GameControls.OnPause += HandlePause;
+            }
+        }
 
         private void Update()
         {
             _swipeCooldownTimer -= Time.deltaTime;
 
+            if (GameControls == null || !GameControls.gameObject.activeInHierarchy)
+            {
+                HandleTouchInput();
+            }
+        }
+
+        private void HandleTouchInput()
+        {
             if (UnityEngine.Input.touchCount > 0)
             {
                 Touch touch = UnityEngine.Input.GetTouch(0);
@@ -50,8 +75,6 @@ namespace Multiformatris.Infrastructure.Input
                         break;
                 }
             }
-
-            HandleSoftDropButton();
         }
 
         private void HandleSwipe(Touch touch)
@@ -64,21 +87,13 @@ namespace Multiformatris.Infrastructure.Input
             float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
 
             if (angle > -45f && angle <= 45f)
-            {
                 OnMove?.Invoke(Vector3Int.right);
-            }
             else if (angle > 45f && angle <= 135f)
-            {
                 OnMove?.Invoke(Vector3Int.forward);
-            }
             else if (angle > -135f && angle <= -45f)
-            {
                 OnMove?.Invoke(Vector3Int.back);
-            }
             else
-            {
                 OnMove?.Invoke(Vector3Int.left);
-            }
 
             _touchStartPos = touch.position;
             _swipeCooldownTimer = SwipeCooldown;
@@ -99,20 +114,48 @@ namespace Multiformatris.Infrastructure.Input
             }
         }
 
-        private void HandleSoftDropButton()
+        private void HandleMove(Vector3Int direction)
         {
-            _softDropActive = false;
+            OnMove?.Invoke(direction);
+        }
+
+        private void HandleRotateX()
+        {
+            OnRotateX?.Invoke();
+        }
+
+        private void HandleRotateZ()
+        {
+            OnRotateZ?.Invoke();
+        }
+
+        private void HandleHardDrop()
+        {
+            OnHardDrop?.Invoke();
+        }
+
+        private void HandleSoftDrop()
+        {
+            OnSoftDrop?.Invoke();
+        }
+
+        private void HandleHold()
+        {
+            OnHold?.Invoke();
+        }
+
+        private void HandlePause()
+        {
+            OnPause?.Invoke();
         }
 
         public void OnSoftDropButtonDown()
         {
-            _softDropActive = true;
             OnSoftDrop?.Invoke();
         }
 
         public void OnSoftDropButtonUp()
         {
-            _softDropActive = false;
         }
 
         public void OnHoldButton()
