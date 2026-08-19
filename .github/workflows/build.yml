@@ -10,6 +10,7 @@ on:
 
 env:
   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+  UNITY_VERSION: 6000.3.22f1
 
 jobs:
   build-android:
@@ -35,15 +36,11 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo $KEYSTORE_BASE64 | base64 -d > multiformatris-release.keystore
 
-      - name: Activate Unity License
-        uses: game-ci/unity-activate@v2
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-
       - name: Build Android APK
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_VERSION: 6000.3.22f1
           TARGET_PLATFORM: Android
           BUILD_NAME: Multiformatris
           BUILD_PATH: build
@@ -54,10 +51,6 @@ jobs:
           ANDROID_VERSION_NAME: 1.0.0
           ANDROID_MIN_SDK_VERSION: 24
           ANDROID_TARGET_SDK_VERSION: 34
-          ANDROID_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
-          ANDROID_KEYALIAS: ${{ secrets.KEY_ALIAS }}
-          ANDROID_KEYALIAS_PASS: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -100,15 +93,11 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo $KEYSTORE_BASE64 | base64 -d > multiformatris-release.keystore
 
-      - name: Activate Unity License
-        uses: game-ci/unity-activate@v2
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-
       - name: Build Android AAB
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_VERSION: 6000.3.22f1
           TARGET_PLATFORM: Android
           BUILD_NAME: Multiformatris
           BUILD_PATH: build
@@ -120,10 +109,6 @@ jobs:
           ANDROID_MIN_SDK_VERSION: 24
           ANDROID_TARGET_SDK_VERSION: 34
           ANDROID_EXPORT_TYPE: app-bundle
-          ANDROID_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
-          ANDROID_KEYALIAS: ${{ secrets.KEY_ALIAS }}
-          ANDROID_KEYALIAS_PASS: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
