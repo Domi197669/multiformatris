@@ -1,0 +1,50 @@
+name: Build iOS
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+env:
+  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+jobs:
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-iOS-${{ hashFiles('Assets/**', 'Packages/manifest.json') }}
+          restore-keys: |
+            Library-iOS-
+            Library-
+
+      - name: Activate Unity License
+        uses: game-ci/unity-activate@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+      - name: Build iOS
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          TARGET_PLATFORM: iOS
+          BUILD_NAME: Multiformatris
+          BUILD_PATH: build
+          IOS_EXPORT_METHOD: development
+
+      - name: Upload iOS Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Multiformatris-iOS
+          path: build/
+          retention-days: 30
