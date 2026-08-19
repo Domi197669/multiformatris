@@ -10,10 +10,16 @@ namespace Multiformatris.Infrastructure.Build
         private const string ANDROID_BUILD_PATH = "Builds/Android/Multiformatris.apk";
         private const string IOS_BUILD_PATH = "Builds/iOS";
 
+        private const string KEYSTORE_PATH = "multiformatris-release.keystore";
+        private const string KEYSTORE_PASSWORD = "multiformatris123";
+        private const string KEY_ALIAS = "multiformatris";
+        private const string KEY_PASSWORD = "multiformatris123";
+
         [MenuItem("Build/Build Android APK")]
         public static void BuildAndroid()
         {
             SetAndroidSettings();
+            SetAndroidSigning();
 
             string[] scenes = GetScenes();
             BuildPlayerOptions options = new BuildPlayerOptions
@@ -28,9 +34,9 @@ namespace Multiformatris.Infrastructure.Build
             BuildSummary summary = report.summary;
 
             if (summary.result == BuildResult.Succeeded)
-                Debug.Log($"Android build succeeded: {summary.totalSize} bytes");
+                Debug.Log($"Android APK build succeeded: {summary.totalSize} bytes");
             else
-                Debug.LogError($"Android build failed: {summary.result}");
+                Debug.LogError($"Android APK build failed: {summary.result}");
         }
 
         [MenuItem("Build/Build iOS")]
@@ -60,6 +66,7 @@ namespace Multiformatris.Infrastructure.Build
         public static void BuildAndroidAAB()
         {
             SetAndroidSettings();
+            SetAndroidSigning();
             EditorUserBuildSettings.buildAppBundle = true;
 
             string[] scenes = GetScenes();
@@ -111,8 +118,25 @@ namespace Multiformatris.Infrastructure.Build
             Application.targetFrameRate = 60;
 
             PlayerSettings.SetUseDefaultApplicationIdentifier(BuildTargetGroup.Android, false);
-            PlayerSettings.Android.keystoreName = "";
-            PlayerSettings.Android.keyaliasName = "";
+        }
+
+        private static void SetAndroidSigning()
+        {
+            string keystoreFullPath = System.IO.Path.Combine(Application.dataPath, "..", KEYSTORE_PATH);
+
+            if (!System.IO.File.Exists(keystoreFullPath))
+            {
+                Debug.LogError($"Keystore not found at: {keystoreFullPath}");
+                Debug.LogError("Generate keystore with: keytool -genkeypair -v -keystore multiformatris-release.keystore -alias multiformatris -keyalg RSA -keysize 2048 -validity 10000");
+                return;
+            }
+
+            PlayerSettings.Android.keystoreName = keystoreFullPath;
+            PlayerSettings.Android.keystorePass = KEYSTORE_PASSWORD;
+            PlayerSettings.Android.keyaliasName = KEY_ALIAS;
+            PlayerSettings.Android.keyaliasPass = KEY_PASSWORD;
+
+            Debug.Log($"Android signing configured: {KEY_ALIAS}");
         }
 
         private static void SetIOSSettings()
@@ -152,6 +176,29 @@ namespace Multiformatris.Infrastructure.Build
         public static void OpenBuildFolder()
         {
             EditorUtility.RevealInFinder("Builds");
+        }
+
+        [MenuItem("Build/Verify Signing Setup")]
+        public static void VerifySigningSetup()
+        {
+            string keystoreFullPath = System.IO.Path.Combine(Application.dataPath, "..", KEYSTORE_PATH);
+
+            Debug.Log("=== Android Signing Verification ===");
+            Debug.Log($"Keystore path: {keystoreFullPath}");
+            Debug.Log($"Keystore exists: {System.IO.File.Exists(keystoreFullPath)}");
+            Debug.Log($"Key alias: {KEY_ALIAS}");
+            Debug.Log($"Application ID: {PlayerSettings.GetApplicationIdentifier(BuildTargetGroup.Android)}");
+
+            if (System.IO.File.Exists(keystoreFullPath))
+            {
+                Debug.Log("✓ Keystore found - Signing is configured!");
+                Debug.Log("✓ You can now build signed APK/AAB for Play Console");
+            }
+            else
+            {
+                Debug.LogError("✗ Keystore NOT found!");
+                Debug.LogError("Run: keytool -genkeypair -v -keystore multiformatris-release.keystore -alias multiformatris -keyalg RSA -keysize 2048 -validity 10000");
+            }
         }
     }
 }
