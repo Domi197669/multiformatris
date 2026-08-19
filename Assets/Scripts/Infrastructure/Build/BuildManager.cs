@@ -97,10 +97,10 @@ namespace Multiformatris.Infrastructure.Build
             PlayerSettings.bundleVersion = "1.0.0";
             PlayerSettings.Android.bundleVersionCode = 1;
 
-            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24;
+            PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel25;
             PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)34;
 
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingBackend.IL2CPP);
+            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
             PlayerSettings.Android.preferredInstallLocation = AndroidPreferredInstallLocation.PreferExternal;
@@ -117,7 +117,6 @@ namespace Multiformatris.Infrastructure.Build
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
 
-            PlayerSettings.SetUseDefaultApplicationIdentifier(BuildTargetGroup.Android, false);
         }
 
         private static void SetAndroidSigning()

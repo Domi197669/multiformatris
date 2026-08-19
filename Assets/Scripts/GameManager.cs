@@ -96,30 +96,25 @@ namespace Multiformatris
 
         private void SetupInput()
         {
-            InputHandler handler = InputHandler != null ? InputHandler :
-                (MobileInputHandler != null ? MobileInputHandler : null);
-
-            if (handler == null) return;
-
-            if (handler is InputHandler kbHandler)
+            if (MobileInputHandler != null)
             {
-                kbHandler.OnMove += HandleMove;
-                kbHandler.OnRotateX += HandleRotateX;
-                kbHandler.OnRotateZ += HandleRotateZ;
-                kbHandler.OnHardDrop += HandleHardDrop;
-                kbHandler.OnSoftDrop += HandleSoftDrop;
-                kbHandler.OnHold += HandleHold;
-                kbHandler.OnPause += HandlePause;
+                MobileInputHandler.OnMove += HandleMove;
+                MobileInputHandler.OnRotateX += HandleRotateX;
+                MobileInputHandler.OnRotateZ += HandleRotateZ;
+                MobileInputHandler.OnHardDrop += HandleHardDrop;
+                MobileInputHandler.OnSoftDrop += HandleSoftDrop;
+                MobileInputHandler.OnHold += HandleHold;
+                MobileInputHandler.OnPause += HandlePause;
             }
-            else if (handler is MobileInputHandler mobileHandler)
+            else if (InputHandler != null)
             {
-                mobileHandler.OnMove += HandleMove;
-                mobileHandler.OnRotateX += HandleRotateX;
-                mobileHandler.OnRotateZ += HandleRotateZ;
-                mobileHandler.OnHardDrop += HandleHardDrop;
-                mobileHandler.OnSoftDrop += HandleSoftDrop;
-                mobileHandler.OnHold += HandleHold;
-                mobileHandler.OnPause += HandlePause;
+                InputHandler.OnMove += HandleMove;
+                InputHandler.OnRotateX += HandleRotateX;
+                InputHandler.OnRotateZ += HandleRotateZ;
+                InputHandler.OnHardDrop += HandleHardDrop;
+                InputHandler.OnSoftDrop += HandleSoftDrop;
+                InputHandler.OnHold += HandleHold;
+                InputHandler.OnPause += HandlePause;
             }
         }
 

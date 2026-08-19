@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Multiformatris.UI
@@ -72,11 +74,11 @@ namespace Multiformatris.UI
             if (UnityEngine.Input.GetMouseButton(0))
             {
                 bool isOverButton = false;
-                PointerEventData pointerData = new PointerEventData(UnityEngine.EventSystems.EventSystem.current);
-                pointerData.position = UnityEngine.Input.mousePosition;
+                PointerEventData pointerData = new PointerEventData(EventSystem.current);
+                pointerData.position = Input.mousePosition;
 
-                var results = new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
-                UnityEngine.EventSystems.EventSystem.current.RaycastAll(pointerData, results);
+                var results = new List<RaycastResult>();
+                EventSystem.current.RaycastAll(pointerData, results);
 
                 foreach (var result in results)
                 {

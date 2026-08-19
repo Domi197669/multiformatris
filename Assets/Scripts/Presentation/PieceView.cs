@@ -143,14 +143,14 @@ namespace Multiformatris.Presentation
                     float rad = degrees * Mathf.Deg2Rad;
                     float y = cell.y * Mathf.Cos(rad) - cell.z * Mathf.Sin(rad);
                     float z = cell.y * Mathf.Sin(rad) + cell.z * Mathf.Cos(rad);
-                    rotated[i] = new Vector3Int(cell.x, Mathf.RoundToInt(y), Mathf.RoundToInt(z));
+                    rotated[i] = new Vector3Int(Mathf.RoundToInt(cell.x), Mathf.RoundToInt(y), Mathf.RoundToInt(z));
                 }
                 else if (axis == 'z')
                 {
                     float rad = degrees * Mathf.Deg2Rad;
                     float x = cell.x * Mathf.Cos(rad) - cell.y * Mathf.Sin(rad);
                     float y = cell.x * Mathf.Sin(rad) + cell.y * Mathf.Cos(rad);
-                    rotated[i] = new Vector3Int(Mathf.RoundToInt(x), Mathf.RoundToInt(y), cell.z);
+                    rotated[i] = new Vector3Int(Mathf.RoundToInt(x), Mathf.RoundToInt(y), Mathf.RoundToInt(cell.z));
                 }
             }
 

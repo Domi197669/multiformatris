@@ -45,11 +45,12 @@ namespace Multiformatris.UI.Controls
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (Background != null)
+            if (Background != null &&
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    Background, eventData.position, _camera, out Vector2 localPoint);
-
-            UpdateKnob(localPoint);
+                    Background, eventData.position, _camera, out Vector2 localPoint))
+            {
+                UpdateKnob(localPoint);
+            }
         }
 
         public void OnDrag(PointerEventData eventData)

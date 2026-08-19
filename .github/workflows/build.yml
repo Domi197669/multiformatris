@@ -17,6 +17,17 @@ jobs:
     name: Build Android APK
     runs-on: ubuntu-latest
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: false
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -49,7 +60,7 @@ jobs:
           ANDROID_APP_NAME: Multiformatris
           ANDROID_VERSION_CODE: 1
           ANDROID_VERSION_NAME: 1.0.0
-          ANDROID_MIN_SDK_VERSION: 24
+          ANDROID_MIN_SDK_VERSION: 25
           ANDROID_TARGET_SDK_VERSION: 34
 
       - name: Upload APK Artifact
@@ -74,6 +85,17 @@ jobs:
     name: Build Android AAB (Play Store)
     runs-on: ubuntu-latest
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: false
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -106,7 +128,7 @@ jobs:
           ANDROID_APP_NAME: Multiformatris
           ANDROID_VERSION_CODE: 1
           ANDROID_VERSION_NAME: 1.0.0
-          ANDROID_MIN_SDK_VERSION: 24
+          ANDROID_MIN_SDK_VERSION: 25
           ANDROID_TARGET_SDK_VERSION: 34
           ANDROID_EXPORT_TYPE: app-bundle
 
