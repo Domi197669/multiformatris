@@ -1,0 +1,26 @@
+name: Acquire Unity License
+
+on:
+  workflow_dispatch:
+
+jobs:
+  activation:
+    name: Request Unity Manual Activation File
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: game-ci/unity-request-activation-file@v2
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_VERSION: 6000.3.22f1
+
+      - name: Upload activation file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity_v${{ steps.getManualLicenseFile.outputs.version }}_alf
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
