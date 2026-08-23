@@ -5,22 +5,34 @@ on:
 
 jobs:
   activation:
-    name: Request Unity Manual Activation File
+    name: Acquire Unity License
     runs-on: ubuntu-latest
     steps:
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: false
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Request manual activation file
-        id: getManualLicenseFile
-        uses: game-ci/unity-request-activation-file@v2
+      - name: Activate Unity License
+        uses: game-ci/unity-activate@v2
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          UNITY_VERSION: 6000.3.22f1
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
-      - name: Upload activation file as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Unity_v${{ steps.getManualLicenseFile.outputs.version }}_alf
-          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
+      - name: Return Unity License
+        if: always()
+        uses: game-ci/unity-return-license@v2
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
