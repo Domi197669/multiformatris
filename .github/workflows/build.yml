@@ -53,15 +53,16 @@ jobs:
 
       - name: Build Android APK
         uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: Android
+          buildName: Multiformatris
+          buildsPath: build
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_VERSION: 6000.3.22f1
-          TARGET_PLATFORM: Android
-          BUILD_NAME: Multiformatris
-          BUILD_PATH: build
           ANDROID_BUILD_SYSTEM: Gradle
           ANDROID_APP_BASE: com.multiformatris.game
           ANDROID_APP_NAME: Multiformatris
@@ -125,23 +126,24 @@ jobs:
 
       - name: Build Android AAB
         uses: game-ci/unity-builder@v4
+        with:
+          targetPlatform: Android
+          buildName: Multiformatris
+          buildsPath: build
+          androidExportType: androidAppBundle
+          androidVersionCode: '1'
+          androidTargetSdkVersion: '34'
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
           UNITY_VERSION: 6000.3.22f1
-          TARGET_PLATFORM: Android
-          BUILD_NAME: Multiformatris
-          BUILD_PATH: build
           ANDROID_BUILD_SYSTEM: Gradle
           ANDROID_APP_BASE: com.multiformatris.game
           ANDROID_APP_NAME: Multiformatris
-          ANDROID_VERSION_CODE: 1
           ANDROID_VERSION_NAME: 1.0.0
           ANDROID_MIN_SDK_VERSION: 25
-          ANDROID_TARGET_SDK_VERSION: 34
-          ANDROID_EXPORT_TYPE: app-bundle
 
       - name: Upload AAB Artifact
         uses: actions/upload-artifact@v4
