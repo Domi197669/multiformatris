@@ -74,14 +74,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Multiformatris-APK
-          path: build/*.apk
+          path: build/**/*.apk
           retention-days: 30
 
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/*.apk
+          files: build/**/*.apk
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -147,5 +147,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Multiformatris-AAB
-          path: build/*.aab
+          path: build/**/*.aab
           retention-days: 30
