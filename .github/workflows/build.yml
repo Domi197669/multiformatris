@@ -40,9 +40,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-Android-v2-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
+          key: Library-Android-v3-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
           restore-keys: |
-            Library-Android-v2-
+            Library-Android-v3-
             Library-Android-
             Library-
 
@@ -113,9 +113,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-AAB-v2-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
+          key: Library-AAB-v3-${{ hashFiles('Assets/**', 'Packages/manifest.json', 'Packages/packages-lock.json') }}
           restore-keys: |
-            Library-AAB-v2-
+            Library-AAB-v3-
             Library-AAB-
             Library-
 

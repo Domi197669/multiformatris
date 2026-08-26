@@ -18,6 +18,12 @@ namespace Multiformatris.Infrastructure.Scene
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Initialize()
         {
+            Screen.orientation = ScreenOrientation.Portrait;
+            Screen.autorotateToPortrait = true;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.autorotateToLandscapeLeft = false;
+            Screen.autorotateToLandscapeRight = false;
+
             if (Object.FindFirstObjectByType<GameManager>() != null) return;
 
             var setupObj = new GameObject("GameSetup");
