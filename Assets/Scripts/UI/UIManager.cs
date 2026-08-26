@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Multiformatris.Core.Game;
 
@@ -38,7 +40,7 @@ namespace Multiformatris.UI
 
         private GameManager _gameManager;
         private GameStateMachine _stateMachine;
-        private bool _touchConsumed;
+        private int _lastTouchFrame = -1;
 
         public void Initialize(GameManager gameManager, GameStateMachine stateMachine)
         {
@@ -114,57 +116,80 @@ namespace Multiformatris.UI
         private void HandleDirectTouch()
         {
             if (_stateMachine == null) return;
-            if (_stateMachine.CurrentState != GameState.Menu &&
-                _stateMachine.CurrentState != GameState.Paused &&
-                _stateMachine.CurrentState != GameState.GameOver)
+            if (Time.frameCount == _lastTouchFrame) return;
+
+            GameState state = _stateMachine.CurrentState;
+            if (state != GameState.Menu && state != GameState.Paused && state != GameState.GameOver)
                 return;
 
-            bool tapDown = false;
-            Vector2 tapPos = Vector2.zero;
+            Vector2 tapPos;
+            bool gotTap = false;
 
             if (Input.touchCount > 0)
             {
                 Touch touch = Input.GetTouch(0);
                 if (touch.phase == TouchPhase.Began)
                 {
-                    tapDown = true;
                     tapPos = touch.position;
+                    gotTap = true;
+                }
+                else
+                {
+                    return;
                 }
             }
             else if (Input.GetMouseButtonDown(0))
             {
-                tapDown = true;
                 tapPos = Input.mousePosition;
+                gotTap = true;
             }
-
-            if (!tapDown) return;
-
-            _touchConsumed = false;
-
-            switch (_stateMachine.CurrentState)
+            else
             {
-                case GameState.Menu:
-                    if (HitButton(PlayButton, tapPos)) OnPlayClicked();
-                    else if (HitButton(OptionsButton, tapPos)) OnOptionsClicked();
-                    else if (HitButton(QuitButton, tapPos)) OnQuitClicked();
-                    break;
-                case GameState.Paused:
-                    if (HitButton(ResumeButton, tapPos)) OnResumeClicked();
-                    else if (HitButton(PauseMenuButton, tapPos)) OnMenuClicked();
-                    break;
-                case GameState.GameOver:
-                    if (HitButton(RetryButton, tapPos)) OnRetryClicked();
-                    else if (HitButton(GameOverMenuButton, tapPos)) OnMenuClicked();
-                    break;
+                return;
             }
-        }
 
-        private bool HitButton(Button button, Vector2 screenPos)
-        {
-            if (button == null || !button.gameObject.activeInHierarchy) return false;
-            RectTransform rt = button.GetComponent<RectTransform>();
-            if (rt == null) return false;
-            return RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, null);
+            if (!gotTap) return;
+            _lastTouchFrame = Time.frameCount;
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            PointerEventData ped = new PointerEventData(EventSystem.current);
+            ped.position = tapPos;
+            EventSystem.current.RaycastAll(ped, results);
+
+            bool hitPlay = false, hitRetry = false, hitResume = false;
+            bool hitMenu = false, hitOptions = false, hitQuit = false;
+            bool hitPauseMenu = false;
+
+            foreach (RaycastResult r in results)
+            {
+                GameObject go = r.gameObject;
+                if (go == null) continue;
+
+                if (PlayButton != null && go == PlayButton.gameObject) hitPlay = true;
+                if (RetryButton != null && go == RetryButton.gameObject) hitRetry = true;
+                if (ResumeButton != null && go == ResumeButton.gameObject) hitResume = true;
+                if (PauseMenuButton != null && go == PauseMenuButton.gameObject) hitPauseMenu = true;
+                if (GameOverMenuButton != null && go == GameOverMenuButton.gameObject) hitMenu = true;
+                if (OptionsButton != null && go == OptionsButton.gameObject) hitOptions = true;
+                if (QuitButton != null && go == QuitButton.gameObject) hitQuit = true;
+            }
+
+            if (state == GameState.Menu)
+            {
+                if (hitPlay) OnPlayClicked();
+                else if (hitOptions) OnOptionsClicked();
+                else if (hitQuit) OnQuitClicked();
+            }
+            else if (state == GameState.Paused)
+            {
+                if (hitResume) OnResumeClicked();
+                else if (hitPauseMenu) OnMenuClicked();
+            }
+            else if (state == GameState.GameOver)
+            {
+                if (hitRetry) OnRetryClicked();
+                else if (hitMenu) OnMenuClicked();
+            }
         }
 
         private void UpdateHUD()
@@ -224,13 +249,29 @@ namespace Multiformatris.UI
         private void OnPlayClicked()
         {
             if (_stateMachine != null && _stateMachine.CurrentState != GameState.Menu) return;
-            _gameManager?.StartNewGame();
+            try
+            {
+                _gameManager?.StartNewGame();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[UIManager] StartNewGame failed: {e}");
+                ShowError(e.Message);
+            }
         }
 
         private void OnRetryClicked()
         {
             if (_stateMachine != null && _stateMachine.CurrentState != GameState.GameOver) return;
-            _gameManager?.StartNewGame();
+            try
+            {
+                _gameManager?.StartNewGame();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[UIManager] StartNewGame (retry) failed: {e}");
+                ShowError(e.Message);
+            }
         }
 
         private void OnResumeClicked()
@@ -262,6 +303,37 @@ namespace Multiformatris.UI
             #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
             #endif
+        }
+
+        private void ShowError(string message)
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas == null) return;
+
+            var errObj = new GameObject("ErrorOverlay");
+            errObj.transform.SetParent(canvas.transform, false);
+            var errRt = errObj.AddComponent<RectTransform>();
+            errRt.anchorMin = Vector2.zero;
+            errRt.anchorMax = Vector2.one;
+            errRt.offsetMin = Vector2.zero;
+            errRt.offsetMax = Vector2.zero;
+            var errBg = errObj.AddComponent<Image>();
+            errBg.color = new Color(0, 0, 0, 0.9f);
+
+            var txtObj = new GameObject("ErrorText");
+            txtObj.transform.SetParent(errObj.transform, false);
+            var txtRt = txtObj.AddComponent<RectTransform>();
+            txtRt.anchorMin = new Vector2(0.1f, 0.3f);
+            txtRt.anchorMax = new Vector2(0.9f, 0.7f);
+            txtRt.offsetMin = Vector2.zero;
+            txtRt.offsetMax = Vector2.zero;
+            var txt = txtObj.AddComponent<Text>();
+            txt.font = Font.CreateDynamicFontFromOSFont("Arial", 24);
+            txt.fontSize = 24;
+            txt.color = Color.red;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.text = "ERROR:\n" + message;
         }
 
         private void OnDestroy()

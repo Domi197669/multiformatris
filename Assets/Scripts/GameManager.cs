@@ -197,6 +197,7 @@ namespace Multiformatris
 
         public void StartNewGame()
         {
+            Debug.Log("[GameManager] StartNewGame called");
             _grid.Clear();
             _currentLevel = StartLevel;
             _linesCleared = 0;
@@ -220,12 +221,15 @@ namespace Multiformatris
             SpawnPiece();
 
             AudioManager.Instance?.PlaySFX(Resources.Load<AudioClip>("SFX/GameStart"));
+            Debug.Log("[GameManager] StartNewGame completed");
         }
 
         private void SpawnPiece()
         {
+            Debug.Log("[GameManager] SpawnPiece called");
             PieceDefinition piece = PieceBag.GetNext();
             Vector3Int spawnPos = GetSpawnPosition();
+            Debug.Log($"[GameManager] SpawnPiece: piece={piece?.PieceName}, pos={spawnPos}");
 
             _dropTimer = 0f;
             _lockTimer = 0f;
@@ -246,6 +250,7 @@ namespace Multiformatris
             }
 
             _stateMachine.TransitionTo(GameState.Falling);
+            Debug.Log("[GameManager] SpawnPiece completed, state=Falling");
         }
 
         private Vector3Int GetSpawnPosition()
