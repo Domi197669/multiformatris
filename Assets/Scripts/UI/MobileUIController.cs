@@ -70,6 +70,7 @@ namespace Multiformatris.UI
         private void HandleSoftDropHold()
         {
             if (SoftDropButton == null || _inputHandler == null) return;
+            if (!SoftDropButton.gameObject.activeInHierarchy) return;
 
             if (UnityEngine.Input.GetMouseButton(0))
             {

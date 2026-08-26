@@ -243,8 +243,9 @@ namespace Multiformatris.Infrastructure.Scene
             if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 var esObj = new GameObject("EventSystem");
-                esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                var es = esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                var inputModule = esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                inputModule.forceModuleActive = true;
             }
 
             var uiManagerObj = new GameObject("UIManager");
@@ -370,6 +371,13 @@ namespace Multiformatris.Infrastructure.Scene
             controlsRt.anchorMax = Vector2.one;
             controlsRt.offsetMin = Vector2.zero;
             controlsRt.offsetMax = Vector2.zero;
+
+            var cg = controlsObj.AddComponent<CanvasGroup>();
+            cg.alpha = 0f;
+            cg.blocksRaycasts = false;
+            cg.interactable = false;
+
+            _uiManager.MobileControlsGroup = cg;
 
             var mobileUIObj = new GameObject("MobileUIController");
             mobileUIObj.transform.SetParent(controlsObj.transform, false);

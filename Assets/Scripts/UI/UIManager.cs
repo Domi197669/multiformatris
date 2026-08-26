@@ -33,8 +33,12 @@ namespace Multiformatris.UI
         public Button OptionsButton;
         public Button QuitButton;
 
+        [Header("Mobile")]
+        public CanvasGroup MobileControlsGroup;
+
         private GameManager _gameManager;
         private GameStateMachine _stateMachine;
+        private bool _touchConsumed;
 
         public void Initialize(GameManager gameManager, GameStateMachine stateMachine)
         {
@@ -70,14 +74,32 @@ namespace Multiformatris.UI
             {
                 case GameState.Falling:
                 case GameState.Spawning:
+                case GameState.Clearing:
                     ShowHUD();
+                    SetMobileControlsVisible(true);
                     break;
                 case GameState.Paused:
                     ShowPause();
+                    SetMobileControlsVisible(false);
                     break;
                 case GameState.GameOver:
                     ShowGameOver();
+                    SetMobileControlsVisible(false);
                     break;
+                case GameState.Menu:
+                    ShowMainMenu();
+                    SetMobileControlsVisible(false);
+                    break;
+            }
+        }
+
+        private void SetMobileControlsVisible(bool visible)
+        {
+            if (MobileControlsGroup != null)
+            {
+                MobileControlsGroup.alpha = visible ? 1f : 0f;
+                MobileControlsGroup.blocksRaycasts = visible;
+                MobileControlsGroup.interactable = visible;
             }
         }
 
@@ -86,6 +108,63 @@ namespace Multiformatris.UI
             if (_gameManager == null) return;
 
             UpdateHUD();
+            HandleDirectTouch();
+        }
+
+        private void HandleDirectTouch()
+        {
+            if (_stateMachine == null) return;
+            if (_stateMachine.CurrentState != GameState.Menu &&
+                _stateMachine.CurrentState != GameState.Paused &&
+                _stateMachine.CurrentState != GameState.GameOver)
+                return;
+
+            bool tapDown = false;
+            Vector2 tapPos = Vector2.zero;
+
+            if (Input.touchCount > 0)
+            {
+                Touch touch = Input.GetTouch(0);
+                if (touch.phase == TouchPhase.Began)
+                {
+                    tapDown = true;
+                    tapPos = touch.position;
+                }
+            }
+            else if (Input.GetMouseButtonDown(0))
+            {
+                tapDown = true;
+                tapPos = Input.mousePosition;
+            }
+
+            if (!tapDown) return;
+
+            _touchConsumed = false;
+
+            switch (_stateMachine.CurrentState)
+            {
+                case GameState.Menu:
+                    if (HitButton(PlayButton, tapPos)) OnPlayClicked();
+                    else if (HitButton(OptionsButton, tapPos)) OnOptionsClicked();
+                    else if (HitButton(QuitButton, tapPos)) OnQuitClicked();
+                    break;
+                case GameState.Paused:
+                    if (HitButton(ResumeButton, tapPos)) OnResumeClicked();
+                    else if (HitButton(PauseMenuButton, tapPos)) OnMenuClicked();
+                    break;
+                case GameState.GameOver:
+                    if (HitButton(RetryButton, tapPos)) OnRetryClicked();
+                    else if (HitButton(GameOverMenuButton, tapPos)) OnMenuClicked();
+                    break;
+            }
+        }
+
+        private bool HitButton(Button button, Vector2 screenPos)
+        {
+            if (button == null || !button.gameObject.activeInHierarchy) return false;
+            RectTransform rt = button.GetComponent<RectTransform>();
+            if (rt == null) return false;
+            return RectTransformUtility.RectangleContainsScreenPoint(rt, screenPos, null);
         }
 
         private void UpdateHUD()
@@ -144,16 +223,19 @@ namespace Multiformatris.UI
 
         private void OnPlayClicked()
         {
+            if (_stateMachine != null && _stateMachine.CurrentState != GameState.Menu) return;
             _gameManager?.StartNewGame();
         }
 
         private void OnRetryClicked()
         {
+            if (_stateMachine != null && _stateMachine.CurrentState != GameState.GameOver) return;
             _gameManager?.StartNewGame();
         }
 
         private void OnResumeClicked()
         {
+            if (_stateMachine != null && _stateMachine.CurrentState != GameState.Paused) return;
             _stateMachine?.TransitionTo(GameState.Falling);
         }
 
