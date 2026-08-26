@@ -7,7 +7,7 @@ namespace Multiformatris.Infrastructure.Build
 {
     public class BuildManager
     {
-        private const string ANDROID_BUILD_PATH = "Builds/Android/Multiformatris.apk";
+        private const string ANDROID_BUILD_PATH = "build/Multiformatris.apk";
 
         private const string KEYSTORE_PATH = "multiformatris-release.keystore";
         private const string KEYSTORE_PASSWORD = "multiformatris123";
@@ -56,7 +56,7 @@ namespace Multiformatris.Infrastructure.Build
             BuildPlayerOptions options = new BuildPlayerOptions
             {
                 scenes = scenes,
-                locationPathName = "Builds/Android/Multiformatris.aab",
+                locationPathName = "build/Multiformatris.aab",
                 target = BuildTarget.Android,
                 options = BuildOptions.None
             };
