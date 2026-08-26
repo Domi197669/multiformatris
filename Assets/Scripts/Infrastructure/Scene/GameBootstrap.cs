@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem.UI;
 using Multiformatris.Core.Grid;
 using Multiformatris.Core.Pieces;
 using Multiformatris.Core.Gravity;
@@ -103,7 +104,7 @@ namespace Multiformatris.Infrastructure.Scene
             if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
             {
                 canvasObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                canvasObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+                canvasObj.AddComponent<InputSystemUIInputModule>();
             }
 
             var bgObj = new GameObject("ErrorBg");
@@ -244,8 +245,7 @@ namespace Multiformatris.Infrastructure.Scene
             {
                 var esObj = new GameObject("EventSystem");
                 var es = esObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
-                var inputModule = esObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-                inputModule.forceModuleActive = true;
+                esObj.AddComponent<InputSystemUIInputModule>();
             }
 
             var uiManagerObj = new GameObject("UIManager");

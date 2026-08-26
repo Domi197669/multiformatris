@@ -14,11 +14,11 @@ namespace Multiformatris.Infrastructure.Build
         private const string KEY_ALIAS = "multiformatris";
         private const string KEY_PASSWORD = "multiformatris123";
 
-        [MenuItem("Build/Build Android APK")]
         public static void BuildAndroid()
         {
             SetAndroidSettings();
             SetAndroidSigning();
+            SetAndroidIcon();
 
             string[] scenes = GetScenes();
             BuildPlayerOptions options = new BuildPlayerOptions
@@ -38,11 +38,18 @@ namespace Multiformatris.Infrastructure.Build
                 Debug.LogError($"Android APK build failed: {summary.result}");
         }
 
-        [MenuItem("Build/Build Android AAB (Play Console)")]
+        [MenuItem("Build/Build Android APK")]
+        public static void BuildAndroidMenu()
+        {
+            BuildAndroid();
+        }
+
+        [MenuItem("Build/Build Android AAB (Play Store)")]
         public static void BuildAndroidAAB()
         {
             SetAndroidSettings();
             SetAndroidSigning();
+            SetAndroidIcon();
             EditorUserBuildSettings.buildAppBundle = true;
 
             string[] scenes = GetScenes();
@@ -96,6 +103,28 @@ namespace Multiformatris.Infrastructure.Build
 
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
+        }
+
+        private static void SetAndroidIcon()
+        {
+            string[] iconPaths = new string[]
+            {
+                "Assets/Icons/app_icon.png",
+                "Assets/Icons/app_icon_192.png"
+            };
+
+            foreach (string path in iconPaths)
+            {
+                Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (icon != null)
+                {
+                    PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Android, new Texture2D[] { icon });
+                    Debug.Log($"[BuildManager] Android launcher icon set from {path}");
+                    return;
+                }
+            }
+
+            Debug.LogWarning("[BuildManager] No icon found in Assets/Icons/");
         }
 
         private static void SetAndroidSigning()

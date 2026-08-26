@@ -57,6 +57,7 @@ jobs:
           targetPlatform: Android
           buildName: Multiformatris
           buildsPath: build
+          buildMethod: Multiformatris.Infrastructure.Build.BuildManager.BuildAndroid
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -133,6 +134,7 @@ jobs:
           androidExportType: androidAppBundle
           androidVersionCode: '1'
           androidTargetSdkVersion: '34'
+          buildMethod: Multiformatris.Infrastructure.Build.BuildManager.BuildAndroidAAB
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
