@@ -31,16 +31,16 @@ namespace Multiformatris.Core.Grid
 
         public static Vector3Int GetSpawnPosition(GridData grid, Vector3Int[] pieceCells, Vector3Int gravityDir)
         {
-            Vector3Int center = new Vector3Int(grid.Width / 2, grid.Height - 1, grid.Depth / 2);
+            Vector3Int center = new Vector3Int(grid.Width / 2, grid.Height / 2, grid.Depth / 2);
 
             if (gravityDir == Vector3Int.down)
-                return new Vector3Int(center.x, grid.Height - 1, center.z);
+                return new Vector3Int(center.x, grid.Height - 2, center.z);
             else if (gravityDir == Vector3Int.up)
-                return new Vector3Int(center.x, 0, center.z);
+                return new Vector3Int(center.x, 1, center.z);
             else if (gravityDir == Vector3Int.right)
-                return new Vector3Int(0, center.y, center.z);
+                return new Vector3Int(1, center.y, center.z);
             else if (gravityDir == Vector3Int.left)
-                return new Vector3Int(grid.Width - 1, center.y, center.z);
+                return new Vector3Int(grid.Width - 2, center.y, center.z);
 
             return center;
         }

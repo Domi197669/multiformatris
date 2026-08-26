@@ -108,9 +108,9 @@ namespace Multiformatris
         private GridConfig CreateDefaultGridConfig()
         {
             var config = ScriptableObject.CreateInstance<GridConfig>();
-            config.Width = 5;
+            config.Width = 7;
             config.Height = 10;
-            config.Depth = 5;
+            config.Depth = 7;
             config.CellSize = 1f;
             config.GridOrigin = Vector3.zero;
             return config;

@@ -6,15 +6,15 @@ namespace Multiformatris.Presentation
     {
         [Header("Target")]
         public Transform target;
-        public Vector3 offset = new Vector3(12, 12, -12);
+        public Vector3 offset = new Vector3(0, 8, -12);
 
         [Header("Rotation")]
         public float rotationSpeed = 2f;
         public float minAngle = 10f;
         public float maxAngle = 80f;
 
-        private float _currentAngleX = -45f;
-        private float _currentAngleY = 30f;
+        private float _currentAngleX = 0f;
+        private float _currentAngleY = 25f;
 
         private void Start()
         {

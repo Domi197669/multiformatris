@@ -50,11 +50,12 @@ namespace Multiformatris.Infrastructure.Scene
             _gameManager.GridView.Initialize(_gameManager.Grid, _gameManager.GridConfig);
             _gameManager.GridView.UpdateBlocks();
 
-            Camera.main.transform.position = new Vector3(12, 12, -12);
-            Camera.main.transform.LookAt(_gameManager.GridConfig.GetCenter());
+            var cameraTargetObj = new GameObject("CameraTarget");
+            cameraTargetObj.transform.SetParent(gameRoot.transform);
+            cameraTargetObj.transform.position = _gameManager.GridConfig.GetCenter();
 
-            _gameManager.CameraController.offset = new Vector3(12, 12, -12);
-            _gameManager.CameraController.SetTarget(gameRoot.transform);
+            _gameManager.CameraController.offset = new Vector3(0, 8, -12);
+            _gameManager.CameraController.SetTarget(cameraTargetObj.transform);
 
             _uiManager.Initialize(_gameManager, _gameManager.StateMachine);
         }
