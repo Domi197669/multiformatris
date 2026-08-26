@@ -89,7 +89,6 @@ namespace Multiformatris.Infrastructure.Build
             PlayerSettings.defaultScreenHeight = 1920;
             PlayerSettings.defaultIsNativeResolution = true;
 
-            PlayerSettings.defaultScreenOrientation = UI.ScreenOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = true;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
             PlayerSettings.allowedAutorotateToLandscapeLeft = false;
