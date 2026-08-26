@@ -20,6 +20,7 @@ namespace Multiformatris.Infrastructure.Input
         [Header("Swipe Settings")]
         public float SwipeThreshold = 50f;
         public float SwipeCooldown = 0.1f;
+        public bool UseButtons = true;
 
         private Vector2 _touchStartPos;
         private float _touchStartTime;
@@ -44,7 +45,7 @@ namespace Multiformatris.Infrastructure.Input
         {
             _swipeCooldownTimer -= Time.deltaTime;
 
-            if (GameControls == null || !GameControls.gameObject.activeInHierarchy)
+            if (!UseButtons && (GameControls == null || !GameControls.gameObject.activeInHierarchy))
             {
                 HandleTouchInput();
             }

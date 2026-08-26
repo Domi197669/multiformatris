@@ -128,6 +128,7 @@ namespace Multiformatris.Infrastructure.Scene
             var mobileInputObj = new GameObject("MobileInputHandler");
             mobileInputObj.transform.SetParent(gameRoot.transform);
             var mobileInput = mobileInputObj.AddComponent<MobileInputHandler>();
+            mobileInput.UseButtons = true;
             _gameManager.MobileInputHandler = mobileInput;
 
             var inputObj = new GameObject("InputHandler");
@@ -237,7 +238,7 @@ namespace Multiformatris.Infrastructure.Scene
             var pauseBtn = CreateButton("PauseButton", panel.transform, "||",
                 new Vector2(420, 820), new Color(0.5f, 0.5f, 0.5f, 0.8f));
             pauseBtn.GetComponentInChildren<TMP_Text>().fontSize = 28;
-            uiManager.PauseMenuButton = pauseBtn;
+            uiManager.PauseButton = pauseBtn;
 
             panel.SetActive(false);
         }
@@ -289,7 +290,7 @@ namespace Multiformatris.Infrastructure.Scene
 
             var menuBtn = CreateButton("MenuButton", panel.transform, "MENU",
                 new Vector2(0, -120), new Color(0.7f, 0.5f, 0.2f));
-            uiManager.MenuButton = menuBtn;
+            uiManager.GameOverMenuButton = menuBtn;
 
             panel.SetActive(false);
         }
@@ -310,31 +311,33 @@ namespace Multiformatris.Infrastructure.Scene
             var mobileUI = mobileUIObj.AddComponent<MobileUIController>();
             mobileUI.CanvasScaler = canvas.GetComponent<CanvasScaler>();
 
-            CreateMobileButton(controlsObj.transform, "LeftBtn", "<", new Vector2(80, 200),
-                new Color(0.3f, 0.3f, 0.3f, 0.6f));
-            CreateMobileButton(controlsObj.transform, "RightBtn", ">", new Vector2(240, 200),
-                new Color(0.3f, 0.3f, 0.3f, 0.6f));
-            CreateMobileButton(controlsObj.transform, "ForwardBtn", "^", new Vector2(160, 300),
-                new Color(0.3f, 0.3f, 0.3f, 0.6f));
-            CreateMobileButton(controlsObj.transform, "BackBtn", "v", new Vector2(160, 100),
-                new Color(0.3f, 0.3f, 0.3f, 0.6f));
+            float btnSize = 120f;
 
-            CreateMobileButton(controlsObj.transform, "RotXBtn", "RX", new Vector2(920, 200),
-                new Color(0.4f, 0.2f, 0.6f, 0.6f));
-            CreateMobileButton(controlsObj.transform, "RotZBtn", "RZ", new Vector2(1000, 300),
-                new Color(0.4f, 0.2f, 0.6f, 0.6f));
+            mobileUI.LeftButton = CreateMobileButton(controlsObj.transform, "LeftBtn", "<",
+                new Vector2(btnSize * 0.5f, btnSize * 1.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+            mobileUI.RightButton = CreateMobileButton(controlsObj.transform, "RightBtn", ">",
+                new Vector2(btnSize * 2.5f, btnSize * 1.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+            mobileUI.ForwardButton = CreateMobileButton(controlsObj.transform, "ForwardBtn", "^",
+                new Vector2(btnSize * 1.5f, btnSize * 2.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+            mobileUI.BackButton = CreateMobileButton(controlsObj.transform, "BackBtn", "v",
+                new Vector2(btnSize * 1.5f, btnSize * 0.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
 
-            CreateMobileButton(controlsObj.transform, "HardDropBtn", "!!", new Vector2(920, 100),
-                new Color(0.8f, 0.2f, 0.2f, 0.6f));
-            CreateMobileButton(controlsObj.transform, "SoftDropBtn", "v", new Vector2(1000, 100),
-                new Color(0.2f, 0.6f, 0.2f, 0.6f));
+            mobileUI.RotateXButton = CreateMobileButton(controlsObj.transform, "RotXBtn", "RX",
+                new Vector2(-btnSize * 1.5f, btnSize * 2f), new Color(0.35f, 0.15f, 0.55f, 0.7f), btnSize);
+            mobileUI.RotateZButton = CreateMobileButton(controlsObj.transform, "RotZBtn", "RZ",
+                new Vector2(-btnSize * 0.5f, btnSize * 2f), new Color(0.35f, 0.15f, 0.55f, 0.7f), btnSize);
 
-            CreateMobileButton(controlsObj.transform, "HoldBtn", "H", new Vector2(960, 820),
-                new Color(0.2f, 0.5f, 0.8f, 0.6f));
+            mobileUI.HardDropButton = CreateMobileButton(controlsObj.transform, "HardDropBtn", "DROP",
+                new Vector2(-btnSize * 1f, btnSize * 0.5f), new Color(0.7f, 0.15f, 0.15f, 0.7f), btnSize * 1.2f);
+            mobileUI.SoftDropButton = CreateMobileButton(controlsObj.transform, "SoftDropBtn", "vv",
+                new Vector2(-btnSize * 1f, btnSize * 1.5f), new Color(0.15f, 0.5f, 0.15f, 0.7f), btnSize);
+
+            mobileUI.HoldButton = CreateMobileButton(controlsObj.transform, "HoldBtn", "H",
+                new Vector2(-btnSize * 0.5f, btnSize * 3.5f), new Color(0.15f, 0.4f, 0.7f, 0.7f), btnSize * 0.8f);
         }
 
-        private void CreateMobileButton(Transform parent, string name, string label,
-            Vector2 position, Color color)
+        private Button CreateMobileButton(Transform parent, string name, string label,
+            Vector2 position, Color color, float size = 100f)
         {
             var btnObj = new GameObject(name);
             btnObj.transform.SetParent(parent, false);
@@ -343,13 +346,22 @@ namespace Multiformatris.Infrastructure.Scene
             rt.anchorMin = new Vector2(0, 0);
             rt.anchorMax = new Vector2(0, 0);
             rt.anchoredPosition = position;
-            rt.sizeDelta = new Vector2(100, 100);
+            rt.sizeDelta = new Vector2(size, size);
 
             var img = btnObj.AddComponent<Image>();
             img.color = color;
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
+
+            var colors = btn.colors;
+            colors.highlightedColor = new Color(
+                Mathf.Min(color.r + 0.15f, 1f),
+                Mathf.Min(color.g + 0.15f, 1f),
+                Mathf.Min(color.b + 0.15f, 1f));
+            colors.pressedColor = new Color(
+                color.r * 0.8f, color.g * 0.8f, color.b * 0.8f);
+            btn.colors = colors;
 
             var txtObj = new GameObject("Label");
             txtObj.transform.SetParent(btnObj.transform, false);
@@ -361,9 +373,11 @@ namespace Multiformatris.Infrastructure.Scene
 
             var txt = txtObj.AddComponent<TextMeshProUGUI>();
             txt.text = label;
-            txt.fontSize = 32;
+            txt.fontSize = size * 0.3f;
             txt.alignment = TextAlignmentOptions.Center;
             txt.color = Color.white;
+
+            return btn;
         }
 
         private GameObject CreatePanel(string name, Transform parent)

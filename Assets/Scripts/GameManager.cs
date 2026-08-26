@@ -429,12 +429,6 @@ namespace Multiformatris
                 GhostPiece.UpdateGhost();
                 GhostPiece.RenderGhost();
             }
-            else if (PieceView != null && PieceView.CurrentPiece != null)
-            {
-                Vector3Int ghostPos = PieceView.GetGhostPosition(_grid);
-                GridView?.ClearPieceBlocks();
-                GridView?.UpdatePieceBlocks(PieceView.RotatedCells, ghostPos, GetColorIndex(PieceView.CurrentPiece), true);
-            }
         }
 
         #region Input Handlers

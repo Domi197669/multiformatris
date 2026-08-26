@@ -11,6 +11,7 @@ namespace Multiformatris.UI
         public TextMeshProUGUI ScoreText;
         public TextMeshProUGUI LevelText;
         public TextMeshProUGUI LinesText;
+        public Button PauseButton;
 
         [Header("Panels")]
         public GameObject HUDPanel;
@@ -22,7 +23,7 @@ namespace Multiformatris.UI
         public TextMeshProUGUI FinalScoreText;
         public TextMeshProUGUI HighScoreText;
         public Button RetryButton;
-        public Button MenuButton;
+        public Button GameOverMenuButton;
 
         [Header("Pause")]
         public Button ResumeButton;
@@ -48,11 +49,13 @@ namespace Multiformatris.UI
 
         private void SetupButtons()
         {
+            if (PlayButton != null) PlayButton.onClick.AddListener(OnPlayClicked);
             if (RetryButton != null) RetryButton.onClick.AddListener(OnRetryClicked);
-            if (MenuButton != null) MenuButton.onClick.AddListener(OnMenuClicked);
+            if (GameOverMenuButton != null) GameOverMenuButton.onClick.AddListener(OnMenuClicked);
             if (ResumeButton != null) ResumeButton.onClick.AddListener(OnResumeClicked);
             if (PauseMenuButton != null) PauseMenuButton.onClick.AddListener(OnMenuClicked);
-            if (PlayButton != null) PlayButton.onClick.AddListener(OnPlayClicked);
+            if (PauseButton != null) PauseButton.onClick.AddListener(OnPauseClicked);
+            if (OptionsButton != null) OptionsButton.onClick.AddListener(OnOptionsClicked);
             if (QuitButton != null) QuitButton.onClick.AddListener(OnQuitClicked);
         }
 
@@ -155,9 +158,20 @@ namespace Multiformatris.UI
             _stateMachine?.TransitionTo(GameState.Falling);
         }
 
+        private void OnPauseClicked()
+        {
+            if (_stateMachine?.CurrentState == GameState.Falling)
+                _stateMachine.TransitionTo(GameState.Paused);
+        }
+
         private void OnMenuClicked()
         {
+            _stateMachine?.TransitionTo(GameState.Menu);
             ShowMainMenu();
+        }
+
+        private void OnOptionsClicked()
+        {
         }
 
         private void OnQuitClicked()
