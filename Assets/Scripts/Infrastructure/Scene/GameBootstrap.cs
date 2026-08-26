@@ -15,20 +15,39 @@ namespace Multiformatris.Infrastructure.Scene
 {
     public static class GameBootstrap
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
+            Debug.Log("[Bootstrap] BeforeSceneLoad - setting screen orientation");
             Screen.orientation = ScreenOrientation.Portrait;
             Screen.autorotateToPortrait = true;
             Screen.autorotateToPortraitUpsideDown = false;
             Screen.autorotateToLandscapeLeft = false;
             Screen.autorotateToLandscapeRight = false;
+        }
 
-            if (Object.FindFirstObjectByType<GameManager>() != null) return;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        static void InitializeAfterScene()
+        {
+            Debug.Log("[Bootstrap] AfterSceneLoad - checking for existing GameManager");
+            try
+            {
+                if (Object.FindFirstObjectByType<GameManager>() != null)
+                {
+                    Debug.Log("[Bootstrap] GameManager already exists, skipping");
+                    return;
+                }
 
-            var setupObj = new GameObject("GameSetup");
-            setupObj.AddComponent<GameSetup>();
-            Object.DontDestroyOnLoad(setupObj);
+                Debug.Log("[Bootstrap] Creating GameSetup");
+                var setupObj = new GameObject("GameSetup");
+                setupObj.AddComponent<GameSetup>();
+                Object.DontDestroyOnLoad(setupObj);
+                Debug.Log("[Bootstrap] GameSetup created successfully");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[Bootstrap] FATAL ERROR in Initialize: {e}");
+            }
         }
     }
 
@@ -37,33 +56,102 @@ namespace Multiformatris.Infrastructure.Scene
         private GameManager _gameManager;
         private UIManager _uiManager;
 
-        void Awake()
+        private void Awake()
         {
-            SetupCamera();
-            SetupAudio();
+            Debug.Log("[GameSetup] Awake starting");
+            try
+            {
+                SetupCamera();
+                Debug.Log("[GameSetup] Camera setup done");
 
-            var gameRoot = new GameObject("GameRoot");
+                SetupAudio();
+                Debug.Log("[GameSetup] Audio setup done");
 
-            SetupGameManager(gameRoot);
-            SetupGridView(gameRoot);
-            SetupPieceView(gameRoot);
-            SetupCameraController(gameRoot);
-            SetupInput(gameRoot);
-            SetupWellRotator(gameRoot);
-            SetupVFX(gameRoot);
-            SetupUI(gameRoot);
+                var gameRoot = new GameObject("GameRoot");
 
-            _gameManager.GridView.Initialize(_gameManager.Grid, _gameManager.GridConfig);
-            _gameManager.GridView.UpdateBlocks();
+                SetupGameManager(gameRoot);
+                Debug.Log("[GameSetup] GameManager setup done");
 
-            var cameraTargetObj = new GameObject("CameraTarget");
-            cameraTargetObj.transform.SetParent(gameRoot.transform);
-            cameraTargetObj.transform.position = _gameManager.GridConfig.GetCenter();
+                SetupGridView(gameRoot);
+                Debug.Log("[GameSetup] GridView setup done");
 
-            _gameManager.CameraController.offset = new Vector3(0, 8, -12);
-            _gameManager.CameraController.SetTarget(cameraTargetObj.transform);
+                SetupPieceView(gameRoot);
+                Debug.Log("[GameSetup] PieceView setup done");
 
-            _uiManager.Initialize(_gameManager, _gameManager.StateMachine);
+                SetupCameraController(gameRoot);
+                Debug.Log("[GameSetup] CameraController setup done");
+
+                SetupInput(gameRoot);
+                Debug.Log("[GameSetup] Input setup done");
+
+                SetupWellRotator(gameRoot);
+                Debug.Log("[GameSetup] WellRotator setup done");
+
+                SetupVFX(gameRoot);
+                Debug.Log("[GameSetup] VFX setup done");
+
+                SetupUI(gameRoot);
+                Debug.Log("[GameSetup] UI setup done");
+
+                _gameManager.GridView.Initialize(_gameManager.Grid, _gameManager.GridConfig);
+                _gameManager.GridView.UpdateBlocks();
+                Debug.Log("[GameSetup] Grid initialized");
+
+                var cameraTargetObj = new GameObject("CameraTarget");
+                cameraTargetObj.transform.SetParent(gameRoot.transform);
+                cameraTargetObj.transform.position = _gameManager.GridConfig.GetCenter();
+
+                _gameManager.CameraController.offset = new Vector3(0, 8, -12);
+                _gameManager.CameraController.SetTarget(cameraTargetObj.transform);
+                Debug.Log("[GameSetup] Camera target set");
+
+                _uiManager.Initialize(_gameManager, _gameManager.StateMachine);
+                Debug.Log("[GameSetup] UIManager initialized - ALL DONE");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[GameSetup] ERROR in Awake: {e}");
+                ShowErrorOnScreen(e);
+            }
+        }
+
+        private void ShowErrorOnScreen(System.Exception e)
+        {
+            var canvasObj = new GameObject("ErrorCanvas");
+            var canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<CanvasScaler>();
+            canvasObj.AddComponent<GraphicRaycaster>();
+
+            if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+            {
+                canvasObj.AddComponent<UnityEngine.EventSystems.EventSystem>();
+                canvasObj.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+            }
+
+            var bgObj = new GameObject("ErrorBg");
+            bgObj.transform.SetParent(canvasObj.transform, false);
+            var bgRt = bgObj.AddComponent<RectTransform>();
+            bgRt.anchorMin = Vector2.zero;
+            bgRt.anchorMax = Vector2.one;
+            bgRt.offsetMin = Vector2.zero;
+            bgRt.offsetMax = Vector2.zero;
+            var bgImg = bgObj.AddComponent<Image>();
+            bgImg.color = new Color(0.1f, 0, 0, 0.95f);
+
+            var txtObj = new GameObject("ErrorText");
+            txtObj.transform.SetParent(bgObj.transform, false);
+            var txtRt = txtObj.AddComponent<RectTransform>();
+            txtRt.anchorMin = new Vector2(0.1f, 0.3f);
+            txtRt.anchorMax = new Vector2(0.9f, 0.8f);
+            txtRt.offsetMin = Vector2.zero;
+            txtRt.offsetMax = Vector2.zero;
+
+            var txt = txtObj.AddComponent<TextMeshProUGUI>();
+            txt.text = $"ERROR:\n{e.Message}\n\n{e.StackTrace}";
+            txt.fontSize = 24;
+            txt.color = Color.red;
+            txt.enableWordWrapping = true;
         }
 
         private void SetupCamera()
@@ -99,34 +187,30 @@ namespace Multiformatris.Infrastructure.Scene
         private void SetupGameManager(GameObject gameRoot)
         {
             _gameManager = gameRoot.AddComponent<GameManager>();
-            _gameManager.StartLevel = 1;
-            _gameManager.LinesPerLevel = 10;
         }
 
         private void SetupGridView(GameObject gameRoot)
         {
-            var gridObj = new GameObject("GridView");
-            gridObj.transform.SetParent(gameRoot.transform);
-            var gridView = gridObj.AddComponent<GridView>();
-            _gameManager.GridView = gridView;
+            var gridViewObj = new GameObject("GridView");
+            gridViewObj.transform.SetParent(gameRoot.transform);
+            _gameManager.GridView = gridViewObj.AddComponent<GridView>();
         }
 
         private void SetupPieceView(GameObject gameRoot)
         {
-            var pieceObj = new GameObject("PieceView");
-            pieceObj.transform.SetParent(gameRoot.transform);
-            var pieceView = pieceObj.AddComponent<PieceView>();
-            pieceView.GridView = _gameManager.GridView;
-            pieceView.Config = _gameManager.GridConfig;
-            _gameManager.PieceView = pieceView;
+            var pieceViewObj = new GameObject("PieceView");
+            pieceViewObj.transform.SetParent(gameRoot.transform);
+            var pv = pieceViewObj.AddComponent<PieceView>();
+            pv.GridView = _gameManager.GridView;
+            pv.Config = _gameManager.GridConfig;
+            _gameManager.PieceView = pv;
         }
 
         private void SetupCameraController(GameObject gameRoot)
         {
-            var camControllerObj = new GameObject("CameraController");
-            camControllerObj.transform.SetParent(gameRoot.transform);
-            var camController = camControllerObj.AddComponent<CameraController>();
-            _gameManager.CameraController = camController;
+            var camCtrlObj = new GameObject("CameraController");
+            camCtrlObj.transform.SetParent(gameRoot.transform);
+            _gameManager.CameraController = camCtrlObj.AddComponent<CameraController>();
         }
 
         private void SetupInput(GameObject gameRoot)
@@ -134,21 +218,19 @@ namespace Multiformatris.Infrastructure.Scene
             var mobileInputObj = new GameObject("MobileInputHandler");
             mobileInputObj.transform.SetParent(gameRoot.transform);
             var mobileInput = mobileInputObj.AddComponent<MobileInputHandler>();
-            mobileInput.UseButtons = true;
             _gameManager.MobileInputHandler = mobileInput;
 
             var inputObj = new GameObject("InputHandler");
             inputObj.transform.SetParent(gameRoot.transform);
-            var inputHandler = inputObj.AddComponent<InputHandler>();
-            _gameManager.InputHandler = inputHandler;
+            var input = inputObj.AddComponent<InputHandler>();
+            _gameManager.InputHandler = input;
         }
 
         private void SetupWellRotator(GameObject gameRoot)
         {
-            var wellObj = new GameObject("WellRotator");
-            wellObj.transform.SetParent(gameRoot.transform);
-            var wellRotator = wellObj.AddComponent<WellRotator>();
-            _gameManager.WellRotator = wellRotator;
+            var wellRotObj = new GameObject("WellRotator");
+            wellRotObj.transform.SetParent(gameRoot.transform);
+            _gameManager.WellRotator = wellRotObj.AddComponent<WellRotator>();
         }
 
         private void SetupVFX(GameObject gameRoot)
