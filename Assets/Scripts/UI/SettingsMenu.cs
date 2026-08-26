@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 namespace Multiformatris.UI
 {
@@ -12,8 +11,8 @@ namespace Multiformatris.UI
         [Header("Audio")]
         public Slider MusicSlider;
         public Slider SFXSlider;
-        public TextMeshProUGUI MusicValueText;
-        public TextMeshProUGUI SFXValueText;
+        public Text MusicValueText;
+        public Text SFXValueText;
 
         [Header("Gameplay")]
         public Toggle GhostPieceToggle;

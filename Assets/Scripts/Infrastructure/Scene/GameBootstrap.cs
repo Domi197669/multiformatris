@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Multiformatris.Core.Grid;
 using Multiformatris.Core.Pieces;
 using Multiformatris.Core.Gravity;
@@ -18,7 +17,6 @@ namespace Multiformatris.Infrastructure.Scene
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
-            Debug.Log("[Bootstrap] BeforeSceneLoad - setting screen orientation");
             Screen.orientation = ScreenOrientation.Portrait;
             Screen.autorotateToPortrait = true;
             Screen.autorotateToPortraitUpsideDown = false;
@@ -29,7 +27,7 @@ namespace Multiformatris.Infrastructure.Scene
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void InitializeAfterScene()
         {
-            Debug.Log("[Bootstrap] AfterSceneLoad - checking for existing GameManager");
+            Debug.Log("[Bootstrap] AfterSceneLoad starting");
             try
             {
                 if (Object.FindFirstObjectByType<GameManager>() != null)
@@ -38,15 +36,14 @@ namespace Multiformatris.Infrastructure.Scene
                     return;
                 }
 
-                Debug.Log("[Bootstrap] Creating GameSetup");
                 var setupObj = new GameObject("GameSetup");
                 setupObj.AddComponent<GameSetup>();
                 Object.DontDestroyOnLoad(setupObj);
-                Debug.Log("[Bootstrap] GameSetup created successfully");
+                Debug.Log("[Bootstrap] GameSetup created");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[Bootstrap] FATAL ERROR in Initialize: {e}");
+                Debug.LogError($"[Bootstrap] FATAL: {e}");
             }
         }
     }
@@ -62,40 +59,21 @@ namespace Multiformatris.Infrastructure.Scene
             try
             {
                 SetupCamera();
-                Debug.Log("[GameSetup] Camera setup done");
-
                 SetupAudio();
-                Debug.Log("[GameSetup] Audio setup done");
 
                 var gameRoot = new GameObject("GameRoot");
 
                 SetupGameManager(gameRoot);
-                Debug.Log("[GameSetup] GameManager setup done");
-
                 SetupGridView(gameRoot);
-                Debug.Log("[GameSetup] GridView setup done");
-
                 SetupPieceView(gameRoot);
-                Debug.Log("[GameSetup] PieceView setup done");
-
                 SetupCameraController(gameRoot);
-                Debug.Log("[GameSetup] CameraController setup done");
-
                 SetupInput(gameRoot);
-                Debug.Log("[GameSetup] Input setup done");
-
                 SetupWellRotator(gameRoot);
-                Debug.Log("[GameSetup] WellRotator setup done");
-
                 SetupVFX(gameRoot);
-                Debug.Log("[GameSetup] VFX setup done");
-
                 SetupUI(gameRoot);
-                Debug.Log("[GameSetup] UI setup done");
 
                 _gameManager.GridView.Initialize(_gameManager.Grid, _gameManager.GridConfig);
                 _gameManager.GridView.UpdateBlocks();
-                Debug.Log("[GameSetup] Grid initialized");
 
                 var cameraTargetObj = new GameObject("CameraTarget");
                 cameraTargetObj.transform.SetParent(gameRoot.transform);
@@ -103,14 +81,13 @@ namespace Multiformatris.Infrastructure.Scene
 
                 _gameManager.CameraController.offset = new Vector3(0, 8, -12);
                 _gameManager.CameraController.SetTarget(cameraTargetObj.transform);
-                Debug.Log("[GameSetup] Camera target set");
 
                 _uiManager.Initialize(_gameManager, _gameManager.StateMachine);
-                Debug.Log("[GameSetup] UIManager initialized - ALL DONE");
+                Debug.Log("[GameSetup] ALL DONE");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"[GameSetup] ERROR in Awake: {e}");
+                Debug.LogError($"[GameSetup] ERROR: {e}");
                 ShowErrorOnScreen(e);
             }
         }
@@ -142,16 +119,17 @@ namespace Multiformatris.Infrastructure.Scene
             var txtObj = new GameObject("ErrorText");
             txtObj.transform.SetParent(bgObj.transform, false);
             var txtRt = txtObj.AddComponent<RectTransform>();
-            txtRt.anchorMin = new Vector2(0.1f, 0.3f);
-            txtRt.anchorMax = new Vector2(0.9f, 0.8f);
+            txtRt.anchorMin = new Vector2(0.05f, 0.2f);
+            txtRt.anchorMax = new Vector2(0.95f, 0.8f);
             txtRt.offsetMin = Vector2.zero;
             txtRt.offsetMax = Vector2.zero;
 
-            var txt = txtObj.AddComponent<TextMeshProUGUI>();
+            var txt = txtObj.AddComponent<Text>();
             txt.text = $"ERROR:\n{e.Message}\n\n{e.StackTrace}";
-            txt.fontSize = 24;
+            txt.fontSize = 20;
             txt.color = Color.red;
-            txt.enableWordWrapping = true;
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
         private void SetupCamera()
@@ -289,9 +267,9 @@ namespace Multiformatris.Infrastructure.Scene
             bg.color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
             CreateText("TitleText", panel.transform, "MULTIFORMATRIS",
-                new Vector2(0, 200), 72, Color.white, TextAlignmentOptions.Center);
+                new Vector2(0, 200), 60, Color.white, TextAnchor.MiddleCenter);
             CreateText("SubtitleText", panel.transform, "3D Tetris",
-                new Vector2(0, 120), 36, new Color(0.7f, 0.7f, 0.8f), TextAlignmentOptions.Center);
+                new Vector2(0, 120), 30, new Color(0.7f, 0.7f, 0.8f), TextAnchor.MiddleCenter);
 
             var playBtn = CreateButton("PlayButton", panel.transform, "PLAY",
                 new Vector2(0, 0), new Color(0.2f, 0.7f, 0.3f));
@@ -312,20 +290,19 @@ namespace Multiformatris.Infrastructure.Scene
             uiManager.HUDPanel = panel;
 
             var scoreText = CreateText("ScoreText", panel.transform, "Score: 0",
-                new Vector2(0, -60), 36, Color.white, TextAlignmentOptions.Center);
+                new Vector2(0, -60), 32, Color.white, TextAnchor.MiddleCenter);
             uiManager.ScoreText = scoreText;
 
             var levelText = CreateText("LevelText", panel.transform, "Level: 1",
-                new Vector2(-300, 60), 28, new Color(0.8f, 0.8f, 1f), TextAlignmentOptions.Center);
+                new Vector2(-300, 60), 24, new Color(0.8f, 0.8f, 1f), TextAnchor.MiddleCenter);
             uiManager.LevelText = levelText;
 
             var linesText = CreateText("LinesText", panel.transform, "Lines: 0",
-                new Vector2(300, 60), 28, new Color(0.8f, 0.8f, 1f), TextAlignmentOptions.Center);
+                new Vector2(300, 60), 24, new Color(0.8f, 0.8f, 1f), TextAnchor.MiddleCenter);
             uiManager.LinesText = linesText;
 
             var pauseBtn = CreateButton("PauseButton", panel.transform, "||",
                 new Vector2(420, 820), new Color(0.5f, 0.5f, 0.5f, 0.8f));
-            pauseBtn.GetComponentInChildren<TMP_Text>().fontSize = 28;
             uiManager.PauseButton = pauseBtn;
 
             panel.SetActive(false);
@@ -340,7 +317,7 @@ namespace Multiformatris.Infrastructure.Scene
             bg.color = new Color(0, 0, 0, 0.7f);
 
             CreateText("PauseTitle", panel.transform, "PAUSED",
-                new Vector2(0, 100), 60, Color.white, TextAlignmentOptions.Center);
+                new Vector2(0, 100), 48, Color.white, TextAnchor.MiddleCenter);
 
             var resumeBtn = CreateButton("ResumeButton", panel.transform, "RESUME",
                 new Vector2(0, 0), new Color(0.2f, 0.7f, 0.3f));
@@ -362,14 +339,14 @@ namespace Multiformatris.Infrastructure.Scene
             bg.color = new Color(0.1f, 0, 0, 0.85f);
 
             CreateText("GameOverTitle", panel.transform, "GAME OVER",
-                new Vector2(0, 200), 64, new Color(1f, 0.3f, 0.3f), TextAlignmentOptions.Center);
+                new Vector2(0, 200), 52, new Color(1f, 0.3f, 0.3f), TextAnchor.MiddleCenter);
 
             var finalScore = CreateText("FinalScoreText", panel.transform, "Score: 0",
-                new Vector2(0, 100), 42, Color.white, TextAlignmentOptions.Center);
+                new Vector2(0, 100), 36, Color.white, TextAnchor.MiddleCenter);
             uiManager.FinalScoreText = finalScore;
 
             var highScore = CreateText("HighScoreText", panel.transform, "Best: 0",
-                new Vector2(0, 40), 32, new Color(1f, 0.8f, 0.2f), TextAlignmentOptions.Center);
+                new Vector2(0, 40), 28, new Color(1f, 0.8f, 0.2f), TextAnchor.MiddleCenter);
             uiManager.HighScoreText = highScore;
 
             var retryBtn = CreateButton("RetryButton", panel.transform, "RETRY",
@@ -459,11 +436,12 @@ namespace Multiformatris.Infrastructure.Scene
             txtRt.offsetMin = Vector2.zero;
             txtRt.offsetMax = Vector2.zero;
 
-            var txt = txtObj.AddComponent<TextMeshProUGUI>();
+            var txt = txtObj.AddComponent<Text>();
             txt.text = label;
-            txt.fontSize = size * 0.3f;
-            txt.alignment = TextAlignmentOptions.Center;
+            txt.fontSize = (int)(size * 0.3f);
+            txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
+            txt.font = Font.CreateDynamicFontFromOSFont("Arial", (int)(size * 0.3f));
 
             return btn;
         }
@@ -482,8 +460,8 @@ namespace Multiformatris.Infrastructure.Scene
             return panel;
         }
 
-        private TextMeshProUGUI CreateText(string name, Transform parent, string text,
-            Vector2 position, float fontSize, Color color, TextAlignmentOptions alignment)
+        private Text CreateText(string name, Transform parent, string text,
+            Vector2 position, float fontSize, Color color, TextAnchor alignment)
         {
             var txtObj = new GameObject(name);
             txtObj.transform.SetParent(parent, false);
@@ -494,13 +472,14 @@ namespace Multiformatris.Infrastructure.Scene
             rt.anchoredPosition = position;
             rt.sizeDelta = new Vector2(600, 80);
 
-            var tmp = txtObj.AddComponent<TextMeshProUGUI>();
-            tmp.text = text;
-            tmp.fontSize = fontSize;
-            tmp.alignment = alignment;
-            tmp.color = color;
+            var txt = txtObj.AddComponent<Text>();
+            txt.text = text;
+            txt.fontSize = (int)fontSize;
+            txt.alignment = alignment;
+            txt.color = color;
+            txt.font = Font.CreateDynamicFontFromOSFont("Arial", (int)fontSize);
 
-            return tmp;
+            return txt;
         }
 
         private Button CreateButton(string name, Transform parent, string label,
@@ -538,12 +517,13 @@ namespace Multiformatris.Infrastructure.Scene
             txtRt.offsetMin = Vector2.zero;
             txtRt.offsetMax = Vector2.zero;
 
-            var txt = txtObj.AddComponent<TextMeshProUGUI>();
+            var txt = txtObj.AddComponent<Text>();
             txt.text = label;
             txt.fontSize = 32;
-            txt.fontStyle = FontStyles.Bold;
-            txt.alignment = TextAlignmentOptions.Center;
+            txt.fontStyle = FontStyle.Bold;
+            txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
+            txt.font = Font.CreateDynamicFontFromOSFont("Arial", 32);
 
             return btn;
         }

@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 namespace Multiformatris.Presentation.VFX
 {
@@ -11,7 +11,7 @@ namespace Multiformatris.Presentation.VFX
         public float ScaleMultiplier = 1.5f;
 
         [Header("References")]
-        public TextMeshProUGUI ScoreText;
+        public Text ScoreText;
 
         private Color _originalColor;
         private float _timer;

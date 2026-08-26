@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using Multiformatris.Core.Game;
 
 namespace Multiformatris.UI
@@ -8,9 +7,9 @@ namespace Multiformatris.UI
     public class UIManager : MonoBehaviour
     {
         [Header("HUD")]
-        public TextMeshProUGUI ScoreText;
-        public TextMeshProUGUI LevelText;
-        public TextMeshProUGUI LinesText;
+        public Text ScoreText;
+        public Text LevelText;
+        public Text LinesText;
         public Button PauseButton;
 
         [Header("Panels")]
@@ -20,8 +19,8 @@ namespace Multiformatris.UI
         public GameObject MainMenuPanel;
 
         [Header("Game Over")]
-        public TextMeshProUGUI FinalScoreText;
-        public TextMeshProUGUI HighScoreText;
+        public Text FinalScoreText;
+        public Text HighScoreText;
         public Button RetryButton;
         public Button GameOverMenuButton;
 
