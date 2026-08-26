@@ -28,6 +28,8 @@ namespace Multiformatris.Presentation.VFX
 
         private void InitializePool()
         {
+            if (ClearParticlePrefab == null) return;
+
             for (int i = 0; i < PoolSize; i++)
             {
                 ParticleSystem ps = Instantiate(ClearParticlePrefab, transform);

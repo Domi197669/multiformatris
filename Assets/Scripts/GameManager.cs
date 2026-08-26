@@ -34,6 +34,9 @@ namespace Multiformatris
         [Header("Systems")]
         public ComboSystem ComboSystem;
 
+        public GridData Grid => _grid;
+        public GameStateMachine StateMachine => _stateMachine;
+
         [Header("Game Settings")]
         public int StartLevel = 1;
         public int LinesPerLevel = 10;
@@ -57,7 +60,6 @@ namespace Multiformatris
         private void Start()
         {
             SetupInput();
-            StartNewGame();
         }
 
         private void Update()
@@ -77,6 +79,15 @@ namespace Multiformatris
 
         private void InitializeGame()
         {
+            if (GridConfig == null)
+                GridConfig = CreateDefaultGridConfig();
+
+            if (GravityConfig == null)
+                GravityConfig = CreateDefaultGravityConfig();
+
+            if (PieceBag == null)
+                PieceBag = CreateDefaultPieceBag();
+
             _grid = new GridData(GridConfig.Width, GridConfig.Height, GridConfig.Depth);
             _stateMachine = new GameStateMachine(GameState.Menu);
 
@@ -92,6 +103,72 @@ namespace Multiformatris
 
             if (ComboSystem == null)
                 ComboSystem = gameObject.AddComponent<ComboSystem>();
+        }
+
+        private GridConfig CreateDefaultGridConfig()
+        {
+            var config = ScriptableObject.CreateInstance<GridConfig>();
+            config.Width = 5;
+            config.Height = 10;
+            config.Depth = 5;
+            config.CellSize = 1f;
+            config.GridOrigin = Vector3.zero;
+            return config;
+        }
+
+        private GravityConfig CreateDefaultGravityConfig()
+        {
+            var config = ScriptableObject.CreateInstance<GravityConfig>();
+            config.GravitySequence = new Vector3Int[]
+            {
+                Vector3Int.down,
+                Vector3Int.up,
+                Vector3Int.right,
+                Vector3Int.left
+            };
+            config.BaseSpeed = 1.0f;
+            config.SpeedIncrementPerLevel = 0.15f;
+            config.MaxSpeed = 10f;
+            return config;
+        }
+
+        private PieceBag CreateDefaultPieceBag()
+        {
+            var bag = ScriptableObject.CreateInstance<PieceBag>();
+            bag.AllPieces = new PieceDefinition[]
+            {
+                CreatePiece("I", new Color(0f, 1f, 1f), new Vector3Int[] {
+                    new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0),
+                    new Vector3Int(2, 0, 0), new Vector3Int(3, 0, 0) }),
+                CreatePiece("J", new Color(0f, 0f, 1f), new Vector3Int[] {
+                    new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0),
+                    new Vector3Int(2, 0, 0), new Vector3Int(0, 1, 0) }),
+                CreatePiece("L", new Color(1f, 0.5f, 0f), new Vector3Int[] {
+                    new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0),
+                    new Vector3Int(2, 0, 0), new Vector3Int(2, 1, 0) }),
+                CreatePiece("O", new Color(1f, 1f, 0f), new Vector3Int[] {
+                    new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0),
+                    new Vector3Int(0, 1, 0), new Vector3Int(1, 1, 0) }),
+                CreatePiece("S", new Color(0f, 1f, 0f), new Vector3Int[] {
+                    new Vector3Int(1, 0, 0), new Vector3Int(2, 0, 0),
+                    new Vector3Int(0, 1, 0), new Vector3Int(1, 1, 0) }),
+                CreatePiece("T", new Color(1f, 0f, 1f), new Vector3Int[] {
+                    new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0),
+                    new Vector3Int(2, 0, 0), new Vector3Int(1, 1, 0) }),
+                CreatePiece("Z", new Color(1f, 0f, 0f), new Vector3Int[] {
+                    new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0),
+                    new Vector3Int(1, 1, 0), new Vector3Int(2, 1, 0) })
+            };
+            return bag;
+        }
+
+        private PieceDefinition CreatePiece(string name, Color color, Vector3Int[] cells)
+        {
+            var piece = ScriptableObject.CreateInstance<PieceDefinition>();
+            piece.PieceName = name;
+            piece.BlockColor = color;
+            piece.Cells = cells;
+            return piece;
         }
 
         private void SetupInput()
