@@ -28,7 +28,7 @@ namespace Multiformatris.UI
 
         private void Start()
         {
-            _inputHandler = FindObjectOfType<Infrastructure.Input.MobileInputHandler>();
+            _inputHandler = FindFirstObjectByType<Infrastructure.Input.MobileInputHandler>();
             SetupButtons();
             SetupCanvasScaler();
         }

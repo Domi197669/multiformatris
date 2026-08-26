@@ -70,6 +70,8 @@ namespace Multiformatris.Core.Game
             }
             else
             {
+                if (_currentCombo > 0)
+                    OnComboBroken?.Invoke();
                 _currentCombo = 1;
             }
 

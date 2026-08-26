@@ -24,6 +24,7 @@ namespace Multiformatris.Presentation
         public Vector3Int CurrentPosition => _currentPosition;
         public Vector3Int[] RotatedCells => _rotatedCells;
         public bool IsActive => _isActive;
+        public Vector3Int GravityDirection { get; set; } = Vector3Int.down;
 
         public void SpawnPiece(PieceDefinition piece, Vector3Int spawnPos)
         {
@@ -91,9 +92,9 @@ namespace Multiformatris.Presentation
         {
             if (!_isActive) return false;
 
-            while (GridOperations.CanPlacePiece(grid, _rotatedCells, _currentPosition + Vector3Int.down))
+            while (GridOperations.CanPlacePiece(grid, _rotatedCells, _currentPosition + GravityDirection))
             {
-                _currentPosition += Vector3Int.down;
+                _currentPosition += GravityDirection;
             }
 
             UpdateVisual();
@@ -104,9 +105,9 @@ namespace Multiformatris.Presentation
         {
             Vector3Int ghostPos = _currentPosition;
 
-            while (GridOperations.CanPlacePiece(grid, _rotatedCells, ghostPos + Vector3Int.down))
+            while (GridOperations.CanPlacePiece(grid, _rotatedCells, ghostPos + GravityDirection))
             {
-                ghostPos += Vector3Int.down;
+                ghostPos += GravityDirection;
             }
 
             return ghostPos;
@@ -114,7 +115,7 @@ namespace Multiformatris.Presentation
 
         public bool CanMoveDown(GridData grid)
         {
-            return GridOperations.CanStep(grid, _rotatedCells, _currentPosition, Vector3Int.down);
+            return GridOperations.CanStep(grid, _rotatedCells, _currentPosition, GravityDirection);
         }
 
         public void Lock(GridData grid, int pieceId, int colorIndex)

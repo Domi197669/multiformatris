@@ -21,6 +21,7 @@ namespace Multiformatris.Presentation
         public Vector3Int[] GhostCells => _ghostCells;
         public Vector3Int GhostPosition => _ghostPosition;
         public bool IsActive => _isActive && EnableGhost;
+        public Vector3Int GravityDirection { get; set; } = Vector3Int.down;
 
         public void Initialize(PieceView pieceView, GridView gridView, GridData grid)
         {
@@ -50,9 +51,9 @@ namespace Multiformatris.Presentation
             Vector3Int testPos = currentPos;
             Vector3Int lastValidPos = currentPos;
 
-            while (GridOperations.CanPlacePiece(_grid, cells, testPos + Vector3Int.down))
+            while (GridOperations.CanPlacePiece(_grid, cells, testPos + GravityDirection))
             {
-                testPos += Vector3Int.down;
+                testPos += GravityDirection;
                 lastValidPos = testPos;
             }
 

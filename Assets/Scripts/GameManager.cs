@@ -231,11 +231,19 @@ namespace Multiformatris
             _lockTimer = 0f;
             _holdUsed = false;
 
+            Vector3Int gravityDir = GravityConfig.GetGravityForLevel(_currentLevel);
+
             if (PieceView != null)
+            {
+                PieceView.GravityDirection = gravityDir;
                 PieceView.SpawnPiece(piece, spawnPos);
+            }
 
             if (GhostPiece != null)
+            {
+                GhostPiece.GravityDirection = gravityDir;
                 GhostPiece.Initialize(PieceView, GridView, _grid);
+            }
 
             _stateMachine.TransitionTo(GameState.Falling);
         }
@@ -254,6 +262,7 @@ namespace Multiformatris
             if (_dropTimer >= dropInterval)
             {
                 _dropTimer = 0f;
+                Vector3Int gravityDir = GetCurrentGravity();
 
                 if (PieceView != null && !PieceView.CanMoveDown(_grid))
                 {
@@ -262,7 +271,7 @@ namespace Multiformatris
                 }
                 else
                 {
-                    PieceView?.Move(Vector3Int.down, _grid);
+                    PieceView?.Move(gravityDir, _grid);
                 }
             }
 
@@ -482,9 +491,10 @@ namespace Multiformatris
         {
             if (_stateMachine.CurrentState != GameState.Falling) return;
 
+            Vector3Int gravityDir = GetCurrentGravity();
             if (PieceView != null && PieceView.CanMoveDown(_grid))
             {
-                PieceView.Move(Vector3Int.down, _grid);
+                PieceView.Move(gravityDir, _grid);
                 _score += 1;
             }
         }
@@ -500,7 +510,17 @@ namespace Multiformatris
 
             if (_holdPiece != null)
             {
-                PieceView?.SpawnPiece(_holdPiece, GetSpawnPosition());
+                Vector3Int gravityDir = GetCurrentGravity();
+                if (PieceView != null)
+                {
+                    PieceView.GravityDirection = gravityDir;
+                    PieceView.SpawnPiece(_holdPiece, GetSpawnPosition());
+                }
+                if (GhostPiece != null)
+                {
+                    GhostPiece.GravityDirection = gravityDir;
+                    GhostPiece.Initialize(PieceView, GridView, _grid);
+                }
             }
             else
             {
@@ -529,5 +549,6 @@ namespace Multiformatris
         public PieceDefinition GetHoldPiece() => _holdPiece;
         public PieceDefinition GetNextPiece() => PieceBag?.PeekNext();
         public GameStateMachine GetStateMachine() => _stateMachine;
+        public Vector3Int GetCurrentGravity() => GravityConfig.GetGravityForLevel(_currentLevel);
     }
 }
