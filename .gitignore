@@ -66,3 +66,24 @@ Assets/TextMesh Pro/
 
 # Packages
 Packages/packages-lock.json
+
+# ============================================================
+# Android / Kotlin project (AndroidGame)
+# ============================================================
+
+# Gradle
+AndroidGame/.gradle/
+AndroidGame/build/
+AndroidGame/app/build/
+
+# Local SDK path (machine-specific, must not be committed)
+AndroidGame/local.properties
+
+# IntelliJ/Android Studio
+AndroidGame/.idea/
+AndroidGame/*.iml
+AndroidGame/app/*.iml
+
+# Signing / keytore
+*.keystore
+*.jks
