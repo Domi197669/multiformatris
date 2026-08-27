@@ -53,5 +53,10 @@ namespace Multiformatris.Presentation
             target = newTarget;
             UpdatePosition();
         }
+
+        public void RecalculatePosition()
+        {
+            UpdatePosition();
+        }
     }
 }

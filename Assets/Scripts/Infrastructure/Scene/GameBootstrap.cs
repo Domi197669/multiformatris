@@ -18,11 +18,7 @@ namespace Multiformatris.Infrastructure.Scene
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
-            Screen.orientation = ScreenOrientation.Portrait;
-            Screen.autorotateToPortrait = true;
-            Screen.autorotateToPortraitUpsideDown = false;
-            Screen.autorotateToLandscapeLeft = false;
-            Screen.autorotateToLandscapeRight = false;
+            ScreenManager.ApplyAutoOrientation();
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -80,7 +76,7 @@ namespace Multiformatris.Infrastructure.Scene
                 cameraTargetObj.transform.SetParent(gameRoot.transform);
                 cameraTargetObj.transform.position = _gameManager.GridConfig.GetCenter();
 
-                _gameManager.CameraController.offset = new Vector3(0, 8, -12);
+                _gameManager.CameraController.offset = GetCameraOffset();
                 _gameManager.CameraController.SetTarget(cameraTargetObj.transform);
 
                 _uiManager.Initialize(_gameManager, _gameManager.StateMachine);
@@ -145,7 +141,15 @@ namespace Multiformatris.Infrastructure.Scene
 
             mainCam.clearFlags = CameraClearFlags.SolidColor;
             mainCam.backgroundColor = new Color(0.05f, 0.05f, 0.1f, 1f);
-            mainCam.fieldOfView = 50;
+            mainCam.fieldOfView = ScreenManager.IsPortrait ? 50f : 55f;
+        }
+
+        private Vector3 GetCameraOffset()
+        {
+            if (ScreenManager.IsPortrait)
+                return new Vector3(0, 8, -12);
+            else
+                return new Vector3(0, 7, -16);
         }
 
         private void SetupAudio()
@@ -236,9 +240,11 @@ namespace Multiformatris.Infrastructure.Scene
             canvas.sortingOrder = 100;
             var scaler = canvasObj.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1920);
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
+            scaler.referenceResolution = ScreenManager.IsPortrait
+                ? new Vector2(1080f, 1920f)
+                : new Vector2(1920f, 1080f);
             canvasObj.AddComponent<GraphicRaycaster>();
 
             if (Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -251,12 +257,20 @@ namespace Multiformatris.Infrastructure.Scene
             var uiManagerObj = new GameObject("UIManager");
             uiManagerObj.transform.SetParent(canvasObj.transform);
             _uiManager = uiManagerObj.AddComponent<UIManager>();
+            _uiManager.CanvasScaler = scaler;
 
             SetupMainMenuPanel(_uiManager, canvasObj);
             SetupHUDPanel(_uiManager, canvasObj);
             SetupPausePanel(_uiManager, canvasObj);
             SetupGameOverPanel(_uiManager, canvasObj);
             SetupMobileControls(canvasObj);
+        }
+
+        private Vector2 Pos(float portraitX, float portraitY, float landscapeX, float landscapeY)
+        {
+            return ScreenManager.IsPortrait
+                ? new Vector2(portraitX, portraitY)
+                : new Vector2(landscapeX, landscapeY);
         }
 
         private void SetupMainMenuPanel(UIManager uiManager, GameObject canvas)
@@ -268,20 +282,20 @@ namespace Multiformatris.Infrastructure.Scene
             bg.color = new Color(0.05f, 0.05f, 0.1f, 0.95f);
 
             CreateText("TitleText", panel.transform, "MULTIFORMATRIS",
-                new Vector2(0, 200), 60, Color.white, TextAnchor.MiddleCenter);
+                Pos(0, 200, 0, 180), 60, Color.white, TextAnchor.MiddleCenter);
             CreateText("SubtitleText", panel.transform, "3D Tetris",
-                new Vector2(0, 120), 30, new Color(0.7f, 0.7f, 0.8f), TextAnchor.MiddleCenter);
+                Pos(0, 120, 0, 110), 30, new Color(0.7f, 0.7f, 0.8f), TextAnchor.MiddleCenter);
 
             var playBtn = CreateButton("PlayButton", panel.transform, "PLAY",
-                new Vector2(0, 0), new Color(0.2f, 0.7f, 0.3f));
+                Pos(0, 0, 0, 0), new Color(0.2f, 0.7f, 0.3f));
             uiManager.PlayButton = playBtn;
 
             var optionsBtn = CreateButton("OptionsButton", panel.transform, "OPTIONS",
-                new Vector2(0, -80), new Color(0.3f, 0.5f, 0.8f));
+                Pos(0, -80, 0, -70), new Color(0.3f, 0.5f, 0.8f));
             uiManager.OptionsButton = optionsBtn;
 
             var quitBtn = CreateButton("QuitButton", panel.transform, "QUIT",
-                new Vector2(0, -160), new Color(0.7f, 0.2f, 0.2f));
+                Pos(0, -160, 0, -140), new Color(0.7f, 0.2f, 0.2f));
             uiManager.QuitButton = quitBtn;
         }
 
@@ -291,19 +305,19 @@ namespace Multiformatris.Infrastructure.Scene
             uiManager.HUDPanel = panel;
 
             var scoreText = CreateText("ScoreText", panel.transform, "Score: 0",
-                new Vector2(0, -60), 32, Color.white, TextAnchor.MiddleCenter);
+                Pos(0, -60, 0, -55), 32, Color.white, TextAnchor.MiddleCenter);
             uiManager.ScoreText = scoreText;
 
             var levelText = CreateText("LevelText", panel.transform, "Level: 1",
-                new Vector2(-300, 60), 24, new Color(0.8f, 0.8f, 1f), TextAnchor.MiddleCenter);
+                Pos(-300, 60, -820, 60), 24, new Color(0.8f, 0.8f, 1f), TextAnchor.MiddleCenter);
             uiManager.LevelText = levelText;
 
             var linesText = CreateText("LinesText", panel.transform, "Lines: 0",
-                new Vector2(300, 60), 24, new Color(0.8f, 0.8f, 1f), TextAnchor.MiddleCenter);
+                Pos(300, 60, 820, 60), 24, new Color(0.8f, 0.8f, 1f), TextAnchor.MiddleCenter);
             uiManager.LinesText = linesText;
 
             var pauseBtn = CreateButton("PauseButton", panel.transform, "||",
-                new Vector2(420, 820), new Color(0.5f, 0.5f, 0.5f, 0.8f));
+                Pos(420, 820, 860, 450), new Color(0.5f, 0.5f, 0.5f, 0.8f));
             uiManager.PauseButton = pauseBtn;
 
             panel.SetActive(false);
@@ -318,14 +332,14 @@ namespace Multiformatris.Infrastructure.Scene
             bg.color = new Color(0, 0, 0, 0.7f);
 
             CreateText("PauseTitle", panel.transform, "PAUSED",
-                new Vector2(0, 100), 48, Color.white, TextAnchor.MiddleCenter);
+                Pos(0, 100, 0, 90), 48, Color.white, TextAnchor.MiddleCenter);
 
             var resumeBtn = CreateButton("ResumeButton", panel.transform, "RESUME",
-                new Vector2(0, 0), new Color(0.2f, 0.7f, 0.3f));
+                Pos(0, 0, 0, 0), new Color(0.2f, 0.7f, 0.3f));
             uiManager.ResumeButton = resumeBtn;
 
             var menuBtn = CreateButton("MenuButton", panel.transform, "MENU",
-                new Vector2(0, -80), new Color(0.7f, 0.5f, 0.2f));
+                Pos(0, -80, 0, -70), new Color(0.7f, 0.5f, 0.2f));
             uiManager.PauseMenuButton = menuBtn;
 
             panel.SetActive(false);
@@ -340,22 +354,22 @@ namespace Multiformatris.Infrastructure.Scene
             bg.color = new Color(0.1f, 0, 0, 0.85f);
 
             CreateText("GameOverTitle", panel.transform, "GAME OVER",
-                new Vector2(0, 200), 52, new Color(1f, 0.3f, 0.3f), TextAnchor.MiddleCenter);
+                Pos(0, 200, 0, 150), 52, new Color(1f, 0.3f, 0.3f), TextAnchor.MiddleCenter);
 
             var finalScore = CreateText("FinalScoreText", panel.transform, "Score: 0",
-                new Vector2(0, 100), 36, Color.white, TextAnchor.MiddleCenter);
+                Pos(0, 100, 0, 80), 36, Color.white, TextAnchor.MiddleCenter);
             uiManager.FinalScoreText = finalScore;
 
             var highScore = CreateText("HighScoreText", panel.transform, "Best: 0",
-                new Vector2(0, 40), 28, new Color(1f, 0.8f, 0.2f), TextAnchor.MiddleCenter);
+                Pos(0, 40, 0, 30), 28, new Color(1f, 0.8f, 0.2f), TextAnchor.MiddleCenter);
             uiManager.HighScoreText = highScore;
 
             var retryBtn = CreateButton("RetryButton", panel.transform, "RETRY",
-                new Vector2(0, -40), new Color(0.2f, 0.7f, 0.3f));
+                Pos(0, -40, 0, -40), new Color(0.2f, 0.7f, 0.3f));
             uiManager.RetryButton = retryBtn;
 
             var menuBtn = CreateButton("MenuButton", panel.transform, "MENU",
-                new Vector2(0, -120), new Color(0.7f, 0.5f, 0.2f));
+                Pos(0, -120, 0, -110), new Color(0.7f, 0.5f, 0.2f));
             uiManager.GameOverMenuButton = menuBtn;
 
             panel.SetActive(false);
@@ -387,38 +401,42 @@ namespace Multiformatris.Infrastructure.Scene
             float btnSize = 120f;
 
             mobileUI.LeftButton = CreateMobileButton(controlsObj.transform, "LeftBtn", "<",
-                new Vector2(btnSize * 0.5f, btnSize * 1.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+                new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
             mobileUI.RightButton = CreateMobileButton(controlsObj.transform, "RightBtn", ">",
-                new Vector2(btnSize * 2.5f, btnSize * 1.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+                new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
             mobileUI.ForwardButton = CreateMobileButton(controlsObj.transform, "ForwardBtn", "^",
-                new Vector2(btnSize * 1.5f, btnSize * 2.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+                new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
             mobileUI.BackButton = CreateMobileButton(controlsObj.transform, "BackBtn", "v",
-                new Vector2(btnSize * 1.5f, btnSize * 0.5f), new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
+                new Color(0.25f, 0.25f, 0.25f, 0.7f), btnSize);
 
             mobileUI.RotateXButton = CreateMobileButton(controlsObj.transform, "RotXBtn", "RX",
-                new Vector2(-btnSize * 1.5f, btnSize * 2f), new Color(0.35f, 0.15f, 0.55f, 0.7f), btnSize);
+                new Color(0.35f, 0.15f, 0.55f, 0.7f), btnSize);
             mobileUI.RotateZButton = CreateMobileButton(controlsObj.transform, "RotZBtn", "RZ",
-                new Vector2(-btnSize * 0.5f, btnSize * 2f), new Color(0.35f, 0.15f, 0.55f, 0.7f), btnSize);
+                new Color(0.35f, 0.15f, 0.55f, 0.7f), btnSize);
 
             mobileUI.HardDropButton = CreateMobileButton(controlsObj.transform, "HardDropBtn", "DROP",
-                new Vector2(-btnSize * 1f, btnSize * 0.5f), new Color(0.7f, 0.15f, 0.15f, 0.7f), btnSize * 1.2f);
+                new Color(0.7f, 0.15f, 0.15f, 0.7f), btnSize * 1.2f);
             mobileUI.SoftDropButton = CreateMobileButton(controlsObj.transform, "SoftDropBtn", "vv",
-                new Vector2(-btnSize * 1f, btnSize * 1.5f), new Color(0.15f, 0.5f, 0.15f, 0.7f), btnSize);
+                new Color(0.15f, 0.5f, 0.15f, 0.7f), btnSize);
 
             mobileUI.HoldButton = CreateMobileButton(controlsObj.transform, "HoldBtn", "H",
-                new Vector2(-btnSize * 0.5f, btnSize * 3.5f), new Color(0.15f, 0.4f, 0.7f, 0.7f), btnSize * 0.8f);
+                new Color(0.15f, 0.4f, 0.7f, 0.7f), btnSize * 0.8f);
+
+            mobileUI.PauseButton = CreateMobileButton(controlsObj.transform, "PauseBtn2", "||",
+                new Color(0.5f, 0.5f, 0.5f, 0.7f), btnSize * 0.8f);
         }
 
         private Button CreateMobileButton(Transform parent, string name, string label,
-            Vector2 position, Color color, float size = 100f)
+            Color color, float size = 100f)
         {
             var btnObj = new GameObject(name);
             btnObj.transform.SetParent(parent, false);
 
             var rt = btnObj.AddComponent<RectTransform>();
-            rt.anchorMin = new Vector2(0, 0);
-            rt.anchorMax = new Vector2(0, 0);
-            rt.anchoredPosition = position;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
             rt.sizeDelta = new Vector2(size, size);
 
             var img = btnObj.AddComponent<Image>();

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Multiformatris.Core.Game;
+using Multiformatris.Infrastructure.Scene;
 
 namespace Multiformatris.UI
 {
@@ -37,10 +38,12 @@ namespace Multiformatris.UI
 
         [Header("Mobile")]
         public CanvasGroup MobileControlsGroup;
+        public CanvasScaler CanvasScaler;
 
         private GameManager _gameManager;
         private GameStateMachine _stateMachine;
         private int _lastTouchFrame = -1;
+        private ScreenFitMode _lastLayoutMode;
 
         public void Initialize(GameManager gameManager, GameStateMachine stateMachine)
         {
@@ -49,6 +52,7 @@ namespace Multiformatris.UI
 
             SetupButtons();
             SetupStateListener();
+            ApplyAdaptiveLayout();
             ShowMainMenu();
         }
 
@@ -108,6 +112,12 @@ namespace Multiformatris.UI
         private void Update()
         {
             if (_gameManager == null) return;
+
+            if (ScreenManager.CurrentMode != _lastLayoutMode)
+            {
+                _lastLayoutMode = ScreenManager.CurrentMode;
+                ApplyAdaptiveLayout();
+            }
 
             UpdateHUD();
             HandleDirectTouch();
@@ -202,6 +212,30 @@ namespace Multiformatris.UI
 
             if (LinesText != null)
                 LinesText.text = $"Lines: {_gameManager.GetLines()}";
+        }
+
+        public void ApplyAdaptiveLayout()
+        {
+            if (CanvasScaler != null)
+            {
+                bool portrait = ScreenManager.IsPortrait;
+                CanvasScaler.referenceResolution = portrait
+                    ? new Vector2(1080f, 1920f)
+                    : new Vector2(1920f, 1080f);
+            }
+
+            if (_gameManager != null && _gameManager.CameraController != null && Camera.main != null)
+            {
+                bool portrait = ScreenManager.IsPortrait;
+                Camera.main.fieldOfView = portrait ? 50f : 55f;
+                _gameManager.CameraController.offset = portrait
+                    ? new Vector3(0, 8, -12)
+                    : new Vector3(0, 7, -16);
+                _gameManager.CameraController.RecalculatePosition();
+            }
+
+            var mobileController = FindFirstObjectByType<MobileUIController>();
+            if (mobileController != null) mobileController.ApplyAdaptiveLayout();
         }
 
         public void ShowMainMenu()

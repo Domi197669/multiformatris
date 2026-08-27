@@ -98,9 +98,10 @@ namespace Multiformatris.Infrastructure.Build
             PlayerSettings.defaultIsNativeResolution = true;
 
             PlayerSettings.allowedAutorotateToPortrait = true;
-            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
-            PlayerSettings.allowedAutorotateToLandscapeLeft = false;
-            PlayerSettings.allowedAutorotateToLandscapeRight = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = true;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.AutoRotation;
 
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
