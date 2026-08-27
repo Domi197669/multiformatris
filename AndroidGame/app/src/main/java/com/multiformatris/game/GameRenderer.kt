@@ -3,6 +3,7 @@ package com.multiformatris.game
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -21,6 +22,13 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
     private var uLightDirLoc = 0
     private var uNormalMatrixLoc = 0
 
+    private var lineProgram = 0
+    private var uLineColorLoc = 0
+    private var uLineMVPLoc = 0
+    private var lineVbo = 0
+    private var gridLineCount = 0
+    private var edgeLineCount = 0
+
     private var sw = 1
     private var sh = 1
     private var lastTickNanos = 0L
@@ -33,6 +41,11 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
         uNormalMatrixLoc = GLES30.glGetUniformLocation(cubeProgram, "uNormalMatrix")
 
         cubeVbo = CubeMesh().load()
+
+        lineProgram = GlUtil.linkProgram(LINE_VERTEX_SHADER, LINE_FRAGMENT_SHADER)
+        uLineColorLoc = GLES30.glGetUniformLocation(lineProgram, "uColor")
+        uLineMVPLoc = GLES30.glGetUniformLocation(lineProgram, "uMVP")
+        lineVbo = buildFrameLines()
 
         GLES30.glEnable(GLES30.GL_DEPTH_TEST)
         GLES30.glEnable(GLES30.GL_CULL_FACE)
@@ -59,7 +72,7 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
 
         Matrix.setLookAtM(
             viewMatrix, 0,
-            CENTER_X, VIEW_DISTANCE_Y, CENTER_Z + VIEW_DISTANCE_Z,
+            EYE_X, EYE_Y, EYE_Z,
             CENTER_X, CENTER_Y, CENTER_Z,
             0f, 1f, 0f
         )
@@ -113,16 +126,88 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
     }
 
     private fun drawGroundFrame() {
-        // Draw the bottom outline of the play field using lines (a simple way to see the well)
-        // Not strictly required; kept minimal.
+        // Draw the play-field frame (base grid + edges) using lines so the 3D
+        // well and the stacking order from bottom to top are easy to read.
+        GLES30.glUseProgram(lineProgram)
+        Matrix.multiplyMM(tmpMatrix, 0, projMatrix, 0, viewMatrix, 0)
+        GLES30.glUniformMatrix4fv(uLineMVPLoc, 1, false, tmpMatrix, 0)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, lineVbo)
+        GLES30.glEnableVertexAttribArray(0)
+        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 12, 0)
+
+        // grid + base edges (subtle)
+        GLES30.glUniform3f(uLineColorLoc, 0.25f, 0.30f, 0.45f)
+        GLES30.glLineWidth(1f)
+        GLES30.glDrawArrays(GLES30.GL_LINES, 0, gridLineCount)
+
+        // outer well edges (brighter)
+        GLES30.glUniform3f(uLineColorLoc, 0.45f, 0.55f, 0.85f)
+        GLES30.glLineWidth(2f)
+        GLES30.glDrawArrays(GLES30.GL_LINES, gridLineCount, edgeLineCount)
+    }
+
+    /** Builds all line vertices once: base grid + outer well edges. Returns the VBO. */
+    private fun buildFrameLines(): Int {
+        val w = controller.width
+        val h = controller.height
+        val d = controller.depth
+
+        val grid = ArrayList<Float>()
+        // base grid lines on the floor (y=0), parallel to X and Z
+        for (z in 0..d) {
+            grid.add(0f); grid.add(0f); grid.add(z.toFloat())
+            grid.add(w.toFloat()); grid.add(0f); grid.add(z.toFloat())
+        }
+        for (x in 0..w) {
+            grid.add(x.toFloat()); grid.add(0f); grid.add(0f)
+            grid.add(x.toFloat()); grid.add(0f); grid.add(d.toFloat())
+        }
+
+        val edges = ArrayList<Float>()
+        fun edge(x1: Int, y1: Int, z1: Int, x2: Int, y2: Int, z2: Int) {
+            edges.add(x1.toFloat()); edges.add(y1.toFloat()); edges.add(z1.toFloat())
+            edges.add(x2.toFloat()); edges.add(y2.toFloat()); edges.add(z2.toFloat())
+        }
+        // bottom ring (y=0)
+        edge(0, 0, 0, w, 0, 0)
+        edge(w, 0, 0, w, 0, d)
+        edge(w, 0, d, 0, 0, d)
+        edge(0, 0, d, 0, 0, 0)
+        // top ring (y=h-1)
+        edge(0, h - 1, 0, w, h - 1, 0)
+        edge(w, h - 1, 0, w, h - 1, d)
+        edge(w, h - 1, d, 0, h - 1, d)
+        edge(0, h - 1, d, 0, h - 1, 0)
+        // vertical edges
+        edge(0, 0, 0, 0, h - 1, 0)
+        edge(w, 0, 0, w, h - 1, 0)
+        edge(w, 0, d, w, h - 1, d)
+        edge(0, 0, d, 0, h - 1, d)
+
+        val verts = FloatArray(grid.size + edges.size)
+        grid.forEachIndexed { i, v -> verts[i] = v }
+        edges.forEachIndexed { i, v -> verts[i + grid.size] = v }
+        gridLineCount = grid.size / 3
+        edgeLineCount = edges.size / 3
+
+        val vbo = IntArray(1)
+        GLES30.glGenBuffers(1, vbo, 0)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo[0])
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, verts.size * 4, FloatBuffer.wrap(verts), GLES30.GL_STATIC_DRAW)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0)
+        return vbo[0]
     }
 
     companion object {
         private const val CENTER_X = 3.5f
         private const val CENTER_Y = 5.0f
         private const val CENTER_Z = 3.5f
-        private const val VIEW_DISTANCE_Y = 9.0f
-        private const val VIEW_DISTANCE_Z = 16.0f
+
+        // 3/4 perspective view: eye up, front-right so width (X), height (Y) and
+        // depth (Z) of the well are all visible and the stack reads bottom-up.
+        private const val EYE_X = 10.0f
+        private const val EYE_Y = 15.0f
+        private const val EYE_Z = 16.0f
 
         private val IDENTITY_NORMAL = floatArrayOf(
             1f, 0f, 0f,
@@ -166,6 +251,25 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
                 float diff = max(dot(n, normalize(uLightDir)), 0.0);
                 float light = 0.45 + 0.55 * diff;
                  fragColor = vec4(uColor * light, 1.0);
+            }
+        """
+
+        private const val LINE_VERTEX_SHADER = """
+            #version 300 es
+            layout(location = 0) in vec3 aPos;
+            uniform mat4 uMVP;
+            void main() {
+                gl_Position = uMVP * vec4(aPos, 1.0);
+            }
+        """
+
+        private const val LINE_FRAGMENT_SHADER = """
+            #version 300 es
+            precision mediump float;
+            uniform vec3 uColor;
+            out vec4 fragColor;
+            void main() {
+                fragColor = vec4(uColor, 1.0);
             }
         """
     }
