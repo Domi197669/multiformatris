@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
 namespace Multiformatris.Infrastructure.Build
@@ -118,7 +119,8 @@ namespace Multiformatris.Infrastructure.Build
                 Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 if (icon != null)
                 {
-                    PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Android, new Texture2D[] { icon });
+                    PlayerSettings.SetIcons(NamedBuildTarget.Android, new Texture2D[] { icon }, IconKind.Any);
+                    PlayerSettings.SetIcons(NamedBuildTarget.Android, new Texture2D[] { icon }, IconKind.Application);
                     Debug.Log($"[BuildManager] Android launcher icon set from {path}");
                     return;
                 }
