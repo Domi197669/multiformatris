@@ -58,5 +58,30 @@ namespace Multiformatris.Presentation
         {
             UpdatePosition();
         }
+
+        public void FitToGrid(float cellSize, int gridWidth, int gridHeight, int gridDepth,
+            Vector3 defaultOffset)
+        {
+            float horizontalExtent = Mathf.Max(gridWidth, gridDepth) * cellSize;
+            float verticalExtent = gridHeight * cellSize;
+
+            Camera cam = Camera.main;
+            float fovVertical = cam != null ? cam.fieldOfView : 50f;
+            float aspect = (float)Screen.width / Mathf.Max(1f, Screen.height);
+            float tanHalf = Mathf.Tan(fovVertical * 0.5f * Mathf.Deg2Rad);
+
+            float safety = 1.4f;
+            float distByWidth = (horizontalExtent * safety) / (2f * tanHalf * Mathf.Max(aspect, 0.1f));
+            float distByHeight = (verticalExtent * safety) / (2f * tanHalf);
+
+            float distance = Mathf.Max(distByWidth, distByHeight);
+            distance = Mathf.Clamp(distance, 8f, 45f);
+
+            Vector3 normalized = defaultOffset.normalized;
+            if (normalized.sqrMagnitude < 0.0001f) normalized = new Vector3(0, 0.5f, -1).normalized;
+
+            offset = normalized * distance;
+            UpdatePosition();
+        }
     }
 }

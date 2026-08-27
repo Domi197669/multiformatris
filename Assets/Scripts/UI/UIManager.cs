@@ -224,14 +224,15 @@ namespace Multiformatris.UI
                     : new Vector2(1920f, 1080f);
             }
 
-            if (_gameManager != null && _gameManager.CameraController != null && Camera.main != null)
+            if (_gameManager != null && _gameManager.CameraController != null && _gameManager.GridConfig != null)
             {
                 bool portrait = ScreenManager.IsPortrait;
                 Camera.main.fieldOfView = portrait ? 50f : 55f;
-                _gameManager.CameraController.offset = portrait
-                    ? new Vector3(0, 8, -12)
-                    : new Vector3(0, 7, -16);
-                _gameManager.CameraController.RecalculatePosition();
+
+                var grid = _gameManager.GridConfig;
+                Vector3 defaultOffset = new Vector3(0, 8, -12);
+                _gameManager.CameraController.FitToGrid(
+                    grid.CellSize, grid.Width, grid.Height, grid.Depth, defaultOffset);
             }
 
             var mobileController = FindFirstObjectByType<MobileUIController>();

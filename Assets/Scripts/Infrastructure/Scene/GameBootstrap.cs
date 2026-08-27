@@ -78,6 +78,7 @@ namespace Multiformatris.Infrastructure.Scene
 
                 _gameManager.CameraController.offset = GetCameraOffset();
                 _gameManager.CameraController.SetTarget(cameraTargetObj.transform);
+                FitCameraToGrid();
 
                 _uiManager.Initialize(_gameManager, _gameManager.StateMachine);
                 Debug.Log("[GameSetup] ALL DONE");
@@ -146,10 +147,17 @@ namespace Multiformatris.Infrastructure.Scene
 
         private Vector3 GetCameraOffset()
         {
-            if (ScreenManager.IsPortrait)
-                return new Vector3(0, 8, -12);
-            else
-                return new Vector3(0, 7, -16);
+            return new Vector3(0, 8, -12);
+        }
+
+        private void FitCameraToGrid()
+        {
+            if (_gameManager == null || _gameManager.CameraController == null) return;
+            if (_gameManager.GridConfig == null) return;
+
+            var grid = _gameManager.GridConfig;
+            _gameManager.CameraController.FitToGrid(
+                grid.CellSize, grid.Width, grid.Height, grid.Depth, GetCameraOffset());
         }
 
         private void SetupAudio()
