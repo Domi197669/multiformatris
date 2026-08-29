@@ -56,7 +56,66 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         sw = width; sh = height
         GLES30.glViewport(0, 0, width, height)
-        Matrix.perspectiveM(projMatrix, 0, 45f, width.toFloat() / height.toFloat(), 0.1f, 100f)
+        buildProjection(width.toFloat() / height.toFloat())
+    }
+
+    /**
+     * Builds an orthographic projection that frames the whole 3D well regardless of
+     * screen size or orientation. Corners of the well are projected onto the camera
+     * plane, then a non-distorting ortho box is derived that keeps the aspect ratio.
+     */
+    private fun buildProjection(aspect: Float) {
+        // view direction and camera basis (matches setLookAtM with up = (0,1,0))
+        val fx = CENTER_X - EYE_X
+        val fy = CENTER_Y - EYE_Y
+        val fz = CENTER_Z - EYE_Z
+        val fl = kotlin.math.sqrt(fx * fx + fy * fy + fz * fz)
+
+        // right = normalize(cross(f, up)), up = (0,1,0)  =>  (-fz, 0, fx)
+        var rx = -fz; var rz = fx
+        val rl = kotlin.math.sqrt(rx * rx + rz * rz)
+        rx /= rl; rz /= rl
+
+        // Project the 8 corners of the well onto the camera basis.
+        var minX = Float.MAX_VALUE; var maxX = -Float.MAX_VALUE
+        var minY = Float.MAX_VALUE; var maxY = -Float.MAX_VALUE
+        var minZ = Float.MAX_VALUE; var maxZ = -Float.MAX_VALUE
+        val w = controller.width
+        val h = controller.height
+        val d = controller.depth
+        for (xi in intArrayOf(0, w)) for (yi in intArrayOf(0, h)) for (zi in intArrayOf(0, d)) {
+            val px = xi - EYE_X
+            val py = yi - EYE_Y
+            val pz = zi - EYE_Z
+            // forward component
+            val fwd = (px * fx + py * fy + pz * fz) / fl
+            // right component
+            val cx = (px * rx + pz * rz) / rl
+            // up component = px,py,pz · upCam
+            // upCam = cross(right, f) = cross((rx,0,rz),(fx,fy,fz)/fl)
+            val upx = 0f * (fz / fl) - rz * (fy / fl)
+            val upy = rz * (fx / fl) - rx * (fz / fl)
+            val upz = rx * (fy / fl) - 0f * (fx / fl)
+            val cy = px * upx + py * upy + pz * upz
+            minX = minOf(minX, cx); maxX = maxOf(maxX, cx)
+            minY = minOf(minY, cy); maxY = maxOf(maxY, cy)
+            minZ = minOf(minZ, fwd); maxZ = maxOf(maxZ, fwd)
+        }
+
+        val geomHalfW = (maxOf(kotlin.math.abs(minX), kotlin.math.abs(maxX)) + 1.2f)
+        val geomHalfH = (maxOf(kotlin.math.abs(minY), kotlin.math.abs(maxY)) + 1.2f)
+        val margin = 1.12f
+
+        var halfH = geomHalfH * margin
+        var halfW = halfH * aspect
+        if (halfW < geomHalfW * margin) {
+            halfW = geomHalfW * margin
+            halfH = halfW / aspect
+        }
+
+        val near = maxOf(0.1f, minZ - 4f)
+        val far = maxZ + 4f
+        Matrix.orthoM(projMatrix, 0, -halfW, halfW, -halfH, halfH, near, far)
     }
 
     override fun onDrawFrame(gl: GL10?) {
