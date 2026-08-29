@@ -223,6 +223,7 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
             TetrisController.COLOR_RED -> floatArrayOf(0.9f, 0.2f, 0.2f)
             TetrisController.COLOR_BLUE -> floatArrayOf(0.2f, 0.4f, 0.9f)
             TetrisController.COLOR_ORANGE -> floatArrayOf(1.0f, 0.6f, 0.1f)
+            TetrisController.COLOR_GOLD -> floatArrayOf(1.0f, 0.84f, 0.1f)
             else -> floatArrayOf(0.5f, 0.5f, 0.5f)
         }
 

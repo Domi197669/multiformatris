@@ -27,6 +27,18 @@ class TetrisController(
     var level = 1
         private set
 
+    // persistent best score (managed by the UI layer via SharedPreferences)
+    var bestScore = 0
+
+    // prize / wildcard system
+    var prizes = 0
+        private set
+    var wildcardActive = false
+        private set
+
+    /** Called whenever a prize is earned (e.g. to show a notification in the UI). */
+    var onPrize: ((Int) -> Unit)? = null
+
     // current piece state
     var piece: List<IntArray> = emptyList()   // list of (x,y,z) relative cells
     var pieceColor: Int = 0
@@ -36,10 +48,13 @@ class TetrisController(
 
     private val random = Random(System.currentTimeMillis())
     private var tickAccum = 0f
+    private var prizeMilestonesEarned = 0
 
     fun start() {
         grid.fill(0)
         score = 0; lines = 0; level = 1
+        prizes = 0; wildcardActive = false
+        prizeMilestonesEarned = 0
         state = State.PLAYING
         spawn()
     }
@@ -106,6 +121,16 @@ class TetrisController(
 
     fun hardDrop() {
         if (state != State.PLAYING) return
+        if (wildcardActive) {
+            // the golden wildcard locks straight into the deepest free hole of its
+            // column, so it always fits perfectly
+            val targetY = lowestEmptyY(px, pz)
+            if (targetY < 0) { state = State.GAME_OVER; return }
+            py = targetY
+            score += 2
+            lockPiece()
+            return
+        }
         while (move(0, -1, 0)) { score += 2 }
         lockPiece()
     }
@@ -114,6 +139,7 @@ class TetrisController(
         for (c in piece) {
             grid[index(px + c[0], py + c[1], pz + c[2])] = pieceColor
         }
+        wildcardActive = false
         clearLines()
         spawn()
     }
@@ -140,6 +166,40 @@ class TetrisController(
         lines += clearedY.size
         score += clearedY.size * 100 * level
         level = 1 + lines / 10
+        awardPrizes()
+    }
+
+    /** Grants a golden trophy/coins whenever score crosses each 15000-point milestone. */
+    private fun awardPrizes() {
+        while (score / PRIZE_MILESTONE > prizeMilestonesEarned) {
+            prizeMilestonesEarned++
+            prizes++
+            bestScore = maxOf(bestScore, score)
+            onPrize?.invoke(prizes)
+        }
+    }
+
+    /** Renders the prize into a golden wildcard piece (1x1 block) that slots into any gap. */
+    fun redeemWildcard(): Boolean {
+        if (state != State.PLAYING) return false
+        if (prizes <= 0 || wildcardActive) return false
+        prizes--
+        wildcardActive = true
+        // the wildcard is a single golden cell that fits any 1-wide hole perfectly
+        piece = listOf(intArrayOf(0, 0, 0))
+        pieceColor = COLOR_GOLD
+        if (collides(piece, px, py, pz)) {
+            py = height - 1
+        }
+        return true
+    }
+
+    /** Lowest empty y in column (x, z); -1 if the whole column is full. */
+    private fun lowestEmptyY(x: Int, z: Int): Int {
+        for (y in 0 until height) {
+            if (grid[index(x, y, z)] == 0) return y
+        }
+        return -1
     }
 
     private fun spawn() {
@@ -177,6 +237,10 @@ class TetrisController(
         const val COLOR_RED = 5
         const val COLOR_BLUE = 6
         const val COLOR_ORANGE = 7
+        const val COLOR_GOLD = 8
+
+        /** Score milestone that grants a golden prize (trophy/coins). */
+        const val PRIZE_MILESTONE = 15000
 
         private val PIECES = listOf(
             PieceDef(listOf(intArrayOf(0,0,0), intArrayOf(0,0,1), intArrayOf(0,0,2), intArrayOf(0,0,3)), COLOR_CYAN),
