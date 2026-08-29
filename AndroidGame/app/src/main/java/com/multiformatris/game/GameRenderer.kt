@@ -28,6 +28,8 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
     private var lineVbo = 0
     private var gridLineCount = 0
     private var edgeLineCount = 0
+    private var cubeEdgeVbo = 0
+    private var cubeEdgeCount = 0
 
     private var sw = 1
     private var sh = 1
@@ -46,10 +48,12 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
         uLineColorLoc = GLES30.glGetUniformLocation(lineProgram, "uColor")
         uLineMVPLoc = GLES30.glGetUniformLocation(lineProgram, "uMVP")
         lineVbo = buildFrameLines()
+        cubeEdgeVbo = buildCubeEdges()
 
         GLES30.glEnable(GLES30.GL_DEPTH_TEST)
-        GLES30.glEnable(GLES30.GL_CULL_FACE)
-        GLES30.glCullFace(GLES30.GL_BACK)
+        // No face culling: every cube face is drawn so pieces appear fully solid,
+        // with all their sides visible regardless of viewing angle.
+        GLES30.glDisable(GLES30.GL_CULL_FACE)
         GLES30.glClearColor(0.05f, 0.05f, 0.12f, 1f)
     }
 
@@ -182,6 +186,17 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
         GLES30.glEnableVertexAttribArray(1)
         GLES30.glVertexAttribPointer(1, 3, GLES30.GL_FLOAT, false, 24, 12)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, CubeMesh.VERTS_COUNT)
+
+        // wireframe outline so every side of the cube is clearly delimited
+        GLES30.glUseProgram(lineProgram)
+        Matrix.multiplyMM(tmpMatrix, 0, projMatrix, 0, viewMatrix, 0)
+        GLES30.glUniformMatrix4fv(uLineMVPLoc, 1, false, tmpMatrix, 0)
+        GLES30.glUniform3f(uLineColorLoc, 0.05f, 0.05f, 0.05f)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, cubeEdgeVbo)
+        GLES30.glVertexAttribPointer(0, 3, GLES30.GL_FLOAT, false, 12, 0)
+        GLES30.glLineWidth(1.5f)
+        GLES30.glDrawArrays(GLES30.GL_LINES, 0, cubeEdgeCount)
+        GLES30.glUseProgram(cubeProgram)
     }
 
     private fun drawGroundFrame() {
@@ -257,6 +272,33 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
         return vbo[0]
     }
 
+    /** Builds the 12 edges of a unit cube (from -0.5 to +0.5) for wireframe outlines. */
+    private fun buildCubeEdges(): Int {
+        val e = ArrayList<Float>()
+        val c = 0.5f
+        fun edge(ax: Float, ay: Float, az: Float, bx: Float, by: Float, bz: Float) {
+            e.add(ax); e.add(ay); e.add(az)
+            e.add(bx); e.add(by); e.add(bz)
+        }
+        // bottom square (y=-0.5)
+        edge(-c, -c, -c, c, -c, -c); edge(c, -c, -c, c, -c, c)
+        edge(c, -c, c, -c, -c, c); edge(-c, -c, c, -c, -c, -c)
+        // top square (y=+0.5)
+        edge(-c, c, -c, c, c, -c); edge(c, c, -c, c, c, c)
+        edge(c, c, c, -c, c, c); edge(-c, c, c, -c, c, -c)
+        // verticals
+        edge(-c, -c, -c, -c, c, -c); edge(c, -c, -c, c, c, -c)
+        edge(c, -c, c, c, c, c); edge(-c, -c, c, -c, c, c)
+
+        cubeEdgeCount = e.size / 3
+        val vbo = IntArray(1)
+        GLES30.glGenBuffers(1, vbo, 0)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo[0])
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, e.size * 4, FloatBuffer.wrap(e.toFloatArray()), GLES30.GL_STATIC_DRAW)
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, 0)
+        return vbo[0]
+    }
+
     companion object {
         private const val CENTER_X = 3.5f
         private const val CENTER_Y = 5.0f
@@ -309,8 +351,8 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
             void main() {
                 vec3 n = normalize(vNormal);
                 float diff = max(dot(n, normalize(uLightDir)), 0.0);
-                float light = 0.45 + 0.55 * diff;
-                 fragColor = vec4(uColor * light, 1.0);
+                float light = 0.75 + 0.25 * diff;
+                fragColor = vec4(uColor * light, 1.0);
             }
         """
 
