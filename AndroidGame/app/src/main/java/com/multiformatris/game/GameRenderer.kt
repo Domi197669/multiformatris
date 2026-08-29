@@ -35,6 +35,11 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
     private var sh = 1
     private var lastTickNanos = 0L
 
+    // camera eye, adjusted to the screen orientation
+    private var eyeX = 3.5f
+    private var eyeY = 15f
+    private var eyeZ = 16f
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         cubeProgram = GlUtil.linkProgram(VERTEX_SHADER, FRAGMENT_SHADER)
         uMVPLoc = GLES30.glGetUniformLocation(cubeProgram, "uMVP")
@@ -68,11 +73,30 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
      * screen size or orientation. Corners of the well are projected onto the camera
      * plane, then a non-distorting ortho box is derived that keeps the aspect ratio.
      */
+    private fun setupCamera(aspect: Float) {
+        when {
+            aspect < 0.8f -> {
+                // tall portrait screen: face the well more frontally so the height
+                // fills the screen instead of leaving big empty bands top/bottom
+                eyeX = 3.5f
+                eyeY = 17f
+                eyeZ = 15f
+            }
+            else -> {
+                // landscape / squarish: classic 3/4 view showing all three axes
+                eyeX = 10f
+                eyeY = 15f
+                eyeZ = 16f
+            }
+        }
+    }
+
     private fun buildProjection(aspect: Float) {
+        setupCamera(aspect)
         // view direction and camera basis (matches setLookAtM with up = (0,1,0))
-        val fx = CENTER_X - EYE_X
-        val fy = CENTER_Y - EYE_Y
-        val fz = CENTER_Z - EYE_Z
+        val fx = CENTER_X - eyeX
+        val fy = CENTER_Y - eyeY
+        val fz = CENTER_Z - eyeZ
         val fl = kotlin.math.sqrt(fx * fx + fy * fy + fz * fz)
 
         // right = normalize(cross(f, up)), up = (0,1,0)  =>  (-fz, 0, fx)
@@ -88,9 +112,9 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
         val h = controller.height
         val d = controller.depth
         for (xi in intArrayOf(0, w)) for (yi in intArrayOf(0, h)) for (zi in intArrayOf(0, d)) {
-            val px = xi - EYE_X
-            val py = yi - EYE_Y
-            val pz = zi - EYE_Z
+            val px = xi - eyeX
+            val py = yi - eyeY
+            val pz = zi - eyeZ
             // forward component
             val fwd = (px * fx + py * fy + pz * fz) / fl
             // right component
@@ -135,7 +159,7 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
 
         Matrix.setLookAtM(
             viewMatrix, 0,
-            EYE_X, EYE_Y, EYE_Z,
+            eyeX, eyeY, eyeZ,
             CENTER_X, CENTER_Y, CENTER_Z,
             0f, 1f, 0f
         )
