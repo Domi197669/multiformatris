@@ -76,11 +76,12 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
     private fun setupCamera(aspect: Float) {
         when {
             aspect < 0.8f -> {
-                // tall portrait screen: face the well more frontally so the height
-                // fills the screen instead of leaving big empty bands top/bottom
-                eyeX = 3.5f
-                eyeY = 17f
-                eyeZ = 15f
+                // tall portrait screen: face the well almost straight-on at mid
+                // height so the full height of the well + falling pieces fills the
+                // narrow, tall screen instead of being compressed by an overhead view
+                eyeX = 4.5f
+                eyeY = 9f
+                eyeZ = 16f
             }
             else -> {
                 // landscape / squarish: classic 3/4 view showing all three axes
