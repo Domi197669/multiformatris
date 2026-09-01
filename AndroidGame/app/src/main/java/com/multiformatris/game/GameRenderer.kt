@@ -118,8 +118,9 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
             val pz = zi - eyeZ
             // forward component
             val fwd = (px * fx + py * fy + pz * fz) / fl
-            // right component
-            val cx = (px * rx + pz * rz) / rl
+            // right component (rx/rz were already normalized by dividing by rl,
+            // so applying /rl again would over-shrink the horizontal extent)
+            val cx = px * rx + pz * rz
             // up component = px,py,pz · upCam
             // upCam = cross(right, f) = cross((rx,0,rz),(fx,fy,fz)/fl)
             val upx = 0f * (fz / fl) - rz * (fy / fl)
@@ -140,6 +141,15 @@ class GameRenderer(private val controller: TetrisController) : GLSurfaceView.Ren
         if (halfW < geomHalfW * margin) {
             halfW = geomHalfW * margin
             halfH = halfW / aspect
+        }
+
+        // In tall portrait, enlarge the ortho window slightly so the well stays
+        // inside the central band: the HUD stays visible on top and the trophy +
+        // control pads stay clearly clear below the well's lower edge.
+        if (aspect < 0.8f) {
+            val fit = 1.20f
+            halfH *= fit
+            halfW *= fit
         }
 
         val near = maxOf(0.1f, minZ - 4f)
